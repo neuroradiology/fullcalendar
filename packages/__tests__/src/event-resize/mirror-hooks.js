@@ -1,52 +1,57 @@
-import { resize as dayGridResize } from './DayGridEventResizeUtils'
-import { resize as timeGridResize } from './TimeGridResizeUtils'
+import { TimeGridViewWrapper } from '../lib/wrappers/TimeGridViewWrapper'
+import { CalendarWrapper } from '../lib/wrappers/CalendarWrapper'
+import { waitEventResize } from '../lib/wrappers/interaction-util'
+import { DayGridViewWrapper } from '../lib/wrappers/DayGridViewWrapper'
 
 describe('event resize mirror', function() {
   pushOptions({
     editable: true,
-    defaultDate: '2018-12-25',
+    initialDate: '2018-12-25',
     eventDragMinDistance: 0 // so mirror will render immediately upon mousedown
   })
 
   describe('in month view', function() {
     pushOptions({
-      defaultView: 'dayGridMonth',
+      initialView: 'dayGridMonth',
       events: [
         { start: '2018-12-03', title: 'all day event' }
       ]
     })
 
-    it('gets passed through eventDestroy', function(done) {
-      let mirrorRenderCalls = 0
-      let mirrorDestroyCalls = 0
-      let normalRenderCalls = 0
-      let normalDestroyCalls = 0
+    it('gets passed through render hooks', function(done) {
+      let mirrorMountCalls = 0
+      let mirrorContentCalls = 0
+      let mirrorUnmountCalls = 0
 
-      initCalendar({
-        eventRender(info) {
+      let calendar = initCalendar({
+        eventDidMount(info) {
           if (info.isMirror) {
-            mirrorRenderCalls++
-          } else {
-            normalRenderCalls++
+            mirrorMountCalls++
           }
         },
-        eventDestroy(info) {
+        eventContent(info) {
           if (info.isMirror) {
-            mirrorDestroyCalls++
-          } else {
-            normalDestroyCalls++
+            mirrorContentCalls++
+          }
+        },
+        eventWillUnmount(info) {
+          if (info.isMirror) {
+            mirrorUnmountCalls++
           }
         }
       })
 
-      // drag TWO days
-      dayGridResize('2018-12-03', '2018-12-05').then(function() {
-        expect(mirrorRenderCalls).toBe(3)
-        expect(mirrorDestroyCalls).toBe(3)
+      let dayGridWrapper = new DayGridViewWrapper(calendar).dayGrid
+      let resizing = dayGridWrapper.resizeEvent( // drag TWO days
+        dayGridWrapper.getEventEls()[0],
+        '2018-12-03',
+        '2018-12-05'
+      )
 
-        expect(normalRenderCalls).toBe(2)
-        expect(normalDestroyCalls).toBe(1)
-
+      waitEventResize(calendar, resizing).then(() => {
+        expect(mirrorMountCalls).toBe(1)
+        expect(mirrorContentCalls).toBe(3)
+        expect(mirrorUnmountCalls).toBe(1)
         done()
       })
     })
@@ -54,7 +59,7 @@ describe('event resize mirror', function() {
 
   describe('in timeGrid view', function() {
     pushOptions({
-      defaultView: 'timeGridWeek',
+      initialView: 'timeGridWeek',
       scrollTime: '00:00',
       slotDuration: '01:00',
       snapDuration: '01:00',
@@ -63,37 +68,41 @@ describe('event resize mirror', function() {
       ]
     })
 
-    it('gets passed through eventDestroy', function(done) {
-      let mirrorRenderCalls = 0
-      let mirrorDestroyCalls = 0
-      let normalRenderCalls = 0
-      let normalDestroyCalls = 0
+    it('gets passed through eventWillUnmount', function(done) {
+      let mirrorMountCalls = 0
+      let mirrorContentCalls = 0
+      let mirrorUnmountCalls = 0
 
-      initCalendar({
-        eventRender(info) {
+      let calendar = initCalendar({
+        eventDidMount(info) {
           if (info.isMirror) {
-            mirrorRenderCalls++
-          } else {
-            normalRenderCalls++
+            mirrorMountCalls++
           }
         },
-        eventDestroy(info) {
+        eventContent(info) {
           if (info.isMirror) {
-            mirrorDestroyCalls++
-          } else {
-            normalDestroyCalls++
+            mirrorContentCalls++
+          }
+        },
+        eventWillUnmount(info) {
+          if (info.isMirror) {
+            mirrorUnmountCalls++
           }
         }
       })
 
-      // drag TWO snaps
-      timeGridResize('2018-12-25T02:00:00', '2018-12-25T04:00:00').then(function() {
-        expect(mirrorRenderCalls).toBe(3)
-        expect(mirrorDestroyCalls).toBe(3)
+      let eventEl = new CalendarWrapper(calendar).getFirstEventEl()
+      let timeGridWrapper = new TimeGridViewWrapper(calendar).timeGrid
+      let resizing = timeGridWrapper.resizeEvent(
+        eventEl,
+        '2018-12-25T02:00:00',
+        '2018-12-25T04:00:00' // drag TWO snaps
+      )
 
-        expect(normalRenderCalls).toBe(2)
-        expect(normalDestroyCalls).toBe(1)
-
+      waitEventResize(calendar, resizing).then(() => {
+        expect(mirrorMountCalls).toBe(1)
+        expect(mirrorContentCalls).toBe(3)
+        expect(mirrorUnmountCalls).toBe(1)
         done()
       })
     })

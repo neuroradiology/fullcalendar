@@ -1,3 +1,4 @@
+import './main.scss'
 
 // exports
 // --------------------------------------------------------------------------------------------------
@@ -6,15 +7,13 @@ export const version = '<%= version %>'
 
 // types
 export { OptionsInput } from './types/input-types'
-export {
-  EventInput, EventDef, EventDefHash, EventInstance, EventInstanceHash,
-  parseEventDef, createEventInstance, EventTuple
-} from './structs/event'
+export { EventDef, EventDefHash } from './structs/event-def'
+export { EventInstance, EventInstanceHash, createEventInstance } from './structs/event-instance'
+export { EventInput, parseEventDef, EventTuple } from './structs/event-parse'
 export { BusinessHoursInput, parseBusinessHours } from './structs/business-hours'
 
 export {
   applyAll,
-  debounce,
   padStart,
   isInt,
   capitaliseFirstLetter,
@@ -22,29 +21,26 @@ export {
   compareByFieldSpecs,
   compareByFieldSpec,
   flexibleCompare,
-  computeVisibleDayRange,
   refineProps,
-  matchCellWidths, uncompensateScroll, compensateScroll, subtractInnerElHeight,
-  isMultiDayRange,
-  distributeHeight,
-  undistributeHeight,
   preventSelection, allowSelection, preventContextMenu, allowContextMenu,
   compareNumbers, enableCursor, disableCursor,
-  diffDates
+  guid,
+  computeSmallestCellWidth,
+  OrderSpec
 } from './util/misc'
 
 export {
-  htmlEscape,
-  cssToStr
-} from './util/html'
+  computeVisibleDayRange,
+  isMultiDayRange,
+  diffDates
+} from './util/date'
 
 export {
   removeExact,
   isArraysEqual
 } from './util/array'
 
-export { memoize, memoizeOutput } from './util/memoize'
-export { memoizeRendering, MemoizedRendering } from './component/memoized-rendering'
+export { memoize, memoizeArraylike, memoizeHashlike } from './util/memoize'
 
 export {
   intersectRects,
@@ -54,28 +50,24 @@ export {
   translateRect
 } from './util/geom'
 
-export { mapHash, filterHash, isPropsEqual } from './util/object'
+export { mapHash, filterHash, isPropsEqual, compareObjs, buildHashFromArray, collectFromHash, getUnequalProps } from './util/object'
 
 export {
   findElements,
-  findChildren,
+  findDirectChildren,
   htmlToElement,
-  createElement,
-  insertAfterElement,
-  prependToElement,
   removeElement,
-  appendToElement,
   applyStyle,
   applyStyleProp,
   elementMatches,
-  elementClosest,
-  forceClassName
+  elementClosest
 } from './util/dom-manip'
 
 export { EventStore, filterEventStoreDefs, createEmptyEventStore, mergeEventStores, getRelevantEvents, eventTupleToStore } from './structs/event-store'
 export { EventUiHash, EventUi, processScopedUiProps, combineEventUis } from './component/event-ui'
-export { default as Splitter, SplittableProps } from './component/event-splitting'
-export { buildGotoAnchorHtml, getAllDayHtml, getDayClasses } from './component/date-rendering'
+export { Splitter, SplittableProps } from './component/event-splitting'
+export { getDayClassNames, getDateMeta, DateMeta, getSlotClassNames } from './component/date-rendering'
+export { buildNavLinkData } from './common/nav-link'
 
 export {
   preventDefault,
@@ -88,27 +80,24 @@ export {
   computeEdges,
   computeHeightAndMargins,
   getClippingParents,
-  computeClippingRect,
   computeRect
 } from './util/dom-geom'
 
 export { unpromisify } from './util/promise'
 
-export { default as EmitterMixin, EmitterInterface } from './common/EmitterMixin'
+export { Emitter } from './common/Emitter'
 export { DateRange, rangeContainsMarker, intersectRanges, rangesEqual, rangesIntersect, rangeContainsRange } from './datelib/date-range'
-export { default as Mixin } from './common/Mixin'
-export { default as PositionCache } from './common/PositionCache'
-export { default as ScrollComponent, ScrollbarWidths } from './common/ScrollComponent'
+export { PositionCache } from './common/PositionCache'
 export { ScrollController, ElementScrollController, WindowScrollController } from './common/scroll-controller'
-export { default as Theme } from './theme/Theme'
-export { default as Component, ComponentContext } from './component/Component'
-export { default as DateComponent, Seg, EventSegUiInteractionState } from './component/DateComponent'
-export { default as Calendar, DatePointTransform, DateSpanTransform, DateSelectionApi } from './Calendar'
-export { default as View, ViewProps } from './View'
-export { default as FgEventRenderer, buildSegCompareObj } from './component/renderers/FgEventRenderer'
-export { default as FillRenderer } from './component/renderers/FillRenderer'
+export { Theme } from './theme/Theme'
+export { ComponentContext, ComponentContextType } from './component/ComponentContext'
+export { DateComponent, Seg, EventSegUiInteractionState } from './component/DateComponent'
+export { Calendar } from './Calendar'
+export { CalendarApi } from './CalendarApi'
+export { ViewProps, sliceEvents } from './View'
+export { ViewApi } from './ViewApi'
 
-export { default as DateProfileGenerator, DateProfile } from './DateProfileGenerator'
+export { DateProfileGenerator, DateProfile } from './DateProfileGenerator'
 export { ViewDef } from './structs/view-def'
 export { ViewSpec } from './structs/view-spec'
 export { DateSpan, DateSpanApi, DatePointApi, isDateSpansEqual } from './structs/date-span'
@@ -123,15 +112,21 @@ export {
 export { DateEnv, DateMarkerMeta } from './datelib/env'
 
 export {
-  DateFormatter,
   createFormatter,
-  VerboseFormattingArg,
-  formatIsoTimeString
 } from './datelib/formatting'
+export {
+  DateFormatter,
+  VerboseFormattingArg
+} from './datelib/DateFormatter'
+export {
+  formatIsoTimeString,
+  formatDayString
+} from './datelib/formatting-utils'
 export { NamedTimeZoneImpl } from './datelib/timezone'
 export { parse as parseMarker } from './datelib/parsing'
 
-export { EventSourceDef, EventSource, EventSourceHash } from './structs/event-source'
+export { EventSourceDef } from './structs/event-source-def'
+export { EventSource, EventSourceHash } from './structs/event-source'
 
 export { Interaction, InteractionSettings, interactionSettingsToStore, interactionSettingsStore, InteractionSettingsStore } from './interactions/interaction'
 export { PointerDragEvent } from './interactions/pointer'
@@ -139,7 +134,7 @@ export { Hit } from './interactions/hit'
 export { dateSelectionJoinTransformer } from './interactions/date-selecting'
 export { eventDragMutationMassager, EventDropTransformers } from './interactions/event-dragging'
 export { EventResizeJoinTransforms } from './interactions/event-resizing'
-export { default as ElementDragging } from './interactions/ElementDragging'
+export { ElementDragging } from './interactions/ElementDragging'
 
 export { formatDate, formatRange } from './formatting-api'
 
@@ -149,24 +144,73 @@ export { RecurringType, ParsedRecurring } from './structs/recurring-event'
 
 export { DragMetaInput, DragMeta, parseDragMeta } from './structs/drag-meta'
 
-export { createPlugin, PluginDef, PluginDefInput, ViewPropsTransformer, ViewContainerModifier } from './plugin-system'
-export { reducerFunc, Action, CalendarState } from './reducers/types'
+export { PluginDef, PluginDefInput, ViewPropsTransformer, ViewContainerAppend } from './plugin-system-struct'
+export { createPlugin } from './plugin-system'
+export { ReducerFunc } from './reducers/CalendarStateReducer'
+export { CalendarState } from './reducers/CalendarState'
+export { Action } from './reducers/Action'
+export { ReducerContext } from './reducers/ReducerContext'
 export { CalendarComponentProps } from './CalendarComponent'
 
-export { default as DayHeader } from './common/DayHeader'
-export { computeFallbackHeaderFormat, renderDateCell } from './common/table-utils'
+export { DayHeader } from './common/DayHeader'
+export { computeFallbackHeaderFormat } from './common/table-utils'
+export { TableDateCell, TableDowCell, DateHeaderCellHookProps } from './common/TableDateCell'
 
-export { default as DaySeries } from './common/DaySeries'
+export { DaySeriesModel } from './common/DaySeriesModel'
 
 export { EventInteractionState } from './interactions/event-interaction-state'
-export { EventRenderRange, sliceEventStore, hasBgRendering, getElSeg, computeEventDraggable, computeEventStartResizable, computeEventEndResizable } from './component/event-rendering'
+export {
+  EventRenderRange, sliceEventStore, hasBgRendering, setElSeg, getElSeg,
+  computeSegDraggable, computeSegStartResizable, computeSegEndResizable,
+  getEventClassNames, buildSegTimeText,
+  buildSegCompareObj, sortEventSegs,
+  getSegMeta, EventMeta
+} from './component/event-rendering'
 
-export { default as DayTable, DayTableSeg, DayTableCell } from './common/DayTable'
+export { DayTableModel, DayTableSeg, DayTableCell } from './common/DayTableModel'
 
-export { default as Slicer, SlicedProps } from './common/slicing-utils'
+export { Slicer, SlicedProps } from './common/slicing-utils'
 
 export { EventMutation, applyMutationToEventStore } from './structs/event-mutation'
-export { Constraint, ConstraintInput, AllowFunc, isPropsValid, isInteractionValid } from './validation'
-export { default as EventApi } from './api/EventApi'
+export { Constraint, ConstraintInput, AllowFunc } from './structs/constraint'
+export { isPropsValid, isInteractionValid } from './validation'
+export { EventApi } from './api/EventApi'
 
-export { default as requestJson } from './util/requestJson'
+export { requestJson } from './util/requestJson'
+
+export * from './vdom'
+export { BaseComponent, setRef } from './vdom-util'
+export { DelayedRunner } from './util/runner'
+
+export { ScrollGridProps, ScrollGridSectionConfig, ColGroupConfig, ScrollGridImpl } from './scrollgrid/ScrollGridImpl'
+export { SimpleScrollGrid, SimpleScrollGridSection } from './scrollgrid/SimpleScrollGrid'
+export {
+  CssDimValue, ScrollerLike, SectionConfig, ColProps, ChunkConfig, hasShrinkWidth, renderMicroColGroup,
+  getScrollGridClassNames, getSectionClassNames, getSectionHasLiquidHeight, getAllowYScrolling, renderChunkContent, computeShrinkWidth,
+  ChunkContentCallbackArgs,
+  sanitizeShrinkWidth,
+  ChunkConfigRowContent, ChunkConfigContent,
+  isColPropsEqual,
+  renderScrollShim,
+  getStickyFooterScrollbar,
+  getStickyHeaderDates
+} from './scrollgrid/util'
+export { Scroller, ScrollerProps, OverflowValue } from './scrollgrid/Scroller'
+export { getScrollbarWidths } from './util/scrollbar-width'
+export { RefMap } from './util/RefMap'
+export { getIsRtlScrollbarOnLeft } from './util/scrollbar-side'
+
+export { NowTimer } from './NowTimer'
+export { ScrollResponder, ScrollRequest } from './ScrollResponder'
+export { globalPlugins } from './global-plugins'
+export { RenderHook, RenderHookProps, RenderHookPropsChildren, MountHook, MountHookProps, buildHookClassNameGenerator, ContentHook } from './common/render-hook'
+export { StandardEvent, StandardEventProps } from './common/StandardEvent'
+export { NowIndicatorRoot, NowIndicatorRootProps } from './common/NowIndicatorRoot'
+
+export { DayCellRoot, DayCellRootProps, DayCellContent, DayCellContentProps, DayCellHookProps } from './common/DayCellRoot'
+export { EventRoot, MinimalEventProps } from './common/EventRoot'
+export { renderFill, BgEvent, BgEventProps } from './common/bg-fill'
+export { WeekNumberRoot, WeekNumberRootProps } from './common/WeekNumberRoot'
+
+export { ViewRoot, ViewRootProps } from './common/ViewRoot'
+export { triggerDateSelect, triggerDateClick, buildDatePointApiWithContext, DatePointTransform, DateSpanTransform, DateSelectionApi, getDefaultEventEnd } from './calendar-utils'

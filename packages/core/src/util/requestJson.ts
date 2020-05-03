@@ -1,5 +1,5 @@
 
-export default function requestJson(method: string, url: string, params: object, successCallback, failureCallback) {
+export function requestJson(method: string, url: string, params: object, successCallback, failureCallback) {
   method = method.toUpperCase()
 
   let body = null
@@ -19,12 +19,20 @@ export default function requestJson(method: string, url: string, params: object,
 
   xhr.onload = function() {
     if (xhr.status >= 200 && xhr.status < 400) {
+      let parsed = false
+      let res
+
       try {
-        let res = JSON.parse(xhr.responseText)
+        res = JSON.parse(xhr.responseText)
+        parsed = true
+      } catch (err) {}
+
+      if (parsed) {
         successCallback(res, xhr)
-      } catch (err) {
+      } else {
         failureCallback('Failure parsing JSON', xhr)
       }
+
     } else {
       failureCallback('Request failed', xhr)
     }

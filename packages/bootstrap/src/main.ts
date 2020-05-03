@@ -1,33 +1,20 @@
 import { Theme, createPlugin } from '@fullcalendar/core'
+import './main.scss'
 
 export class BootstrapTheme extends Theme {
 }
 
 BootstrapTheme.prototype.classes = {
-  widget: 'fc-bootstrap',
-
-  tableGrid: 'table-bordered', // avoid `table` class b/c don't want margins. only border color
-  tableList: 'table', // `table` class creates bottom margin but who cares
-  tableListHeading: 'table-active',
-
+  root: 'fc-theme-bootstrap', // TODO: compute this off of registered theme name
+  table: 'table-bordered',
+  tableCellShaded: 'table-active',
   buttonGroup: 'btn-group',
   button: 'btn btn-primary',
   buttonActive: 'active',
-
-  today: 'alert alert-info', // the plain `info` class requires `.table`, too much to ask
-
   popover: 'card card-primary',
   popoverHeader: 'card-header',
   popoverContent: 'card-body',
-
-  // day grid
-  // for left/right border color when border is inset from edges (all-day in timeGrid view)
-  // avoid `table` class b/c don't want margins/padding/structure. only border color.
-  headerRow: 'table-bordered',
-  dayRow: 'table-bordered',
-
-  // list view
-  listView: 'card card-primary'
+  bordered: 'card card-primary fc-bootstrap-bordered'
 }
 
 BootstrapTheme.prototype.baseIconClass = 'fa'
@@ -38,13 +25,21 @@ BootstrapTheme.prototype.iconClasses = {
   prevYear: 'fa-angle-double-left',
   nextYear: 'fa-angle-double-right'
 }
+BootstrapTheme.prototype.rtlIconClasses = {
+  prev: 'fa-chevron-right',
+  next: 'fa-chevron-left',
+  prevYear: 'fa-angle-double-right',
+  nextYear: 'fa-angle-double-left'
+}
 
 BootstrapTheme.prototype.iconOverrideOption = 'bootstrapFontAwesome'
 BootstrapTheme.prototype.iconOverrideCustomButtonOption = 'bootstrapFontAwesome'
 BootstrapTheme.prototype.iconOverridePrefix = 'fa-'
 
-export default createPlugin({
+let plugin = createPlugin({
   themeClasses: {
     bootstrap: BootstrapTheme
   }
 })
+
+export default plugin

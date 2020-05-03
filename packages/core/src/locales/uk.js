@@ -14,10 +14,10 @@ export default {
     day: "День",
     list: "Порядок денний"
   },
-  weekLabel: "Тиж",
+  weekText: "Тиж",
   allDayText: "Увесь день",
-  eventLimitText: function(n) {
+  moreLinkText: function(n) {
     return "+ще " + n + "...";
   },
-  noEventsMessage: "Немає подій для відображення"
+  noEventsText: "Немає подій для відображення"
 };

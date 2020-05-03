@@ -1,31 +1,32 @@
-import { getEventEls } from '../event-render/EventRenderUtils'
-import { getDayEl } from './DayGridRenderUtils'
+import { TimeGridViewWrapper } from '../lib/wrappers/TimeGridViewWrapper'
+
 
 describe('timegrid all-day slot', function() {
   pushOptions({
-    defaultDate: '2019-04-23',
-    defaultView: 'timeGridWeek',
+    initialDate: '2019-04-23',
+    initialView: 'timeGridWeek',
     editable: true
   })
 
   // https://github.com/fullcalendar/fullcalendar/issues/4616
   it('allows dragging after dynamic event adding', function(done) {
-    initCalendar({
+    let calendar = initCalendar({
       eventDrop(arg) {
         expect(arg.event.start).toEqualDate('2019-04-24')
         done()
       }
     })
 
-    currentCalendar.batchRendering(function() {
-      currentCalendar.addEvent({ start: '2019-04-23' })
-      currentCalendar.addEvent({ start: '2019-04-23' })
-      currentCalendar.addEvent({ start: '2019-04-23' })
+    calendar.batchRendering(function() {
+      calendar.addEvent({ start: '2019-04-23' })
+      calendar.addEvent({ start: '2019-04-23' })
+      calendar.addEvent({ start: '2019-04-23' })
     })
 
-    let dayWidth = getDayEl('2019-04-23').width()
+    let dayGridWrapper = new TimeGridViewWrapper(calendar).dayGrid
+    let dayWidth = $(dayGridWrapper.getDayEls('2019-04-23')).width()
+    let lastEventEl = dayGridWrapper.getEventEls()[2]
 
-    let lastEventEl = getEventEls()[2]
     $(lastEventEl).simulate('drag', {
       localPoint: { left: '50%', top: '99%' },
       dx: dayWidth

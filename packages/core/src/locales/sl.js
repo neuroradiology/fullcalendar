@@ -14,8 +14,8 @@ export default {
     day: "Dan",
     list: "Dnevni red"
   },
-  weekLabel: "Teden",
+  weekText: "Teden",
   allDayText: "Ves dan",
-  eventLimitText: "več",
-  noEventsMessage: "Ni dogodkov za prikaz"
+  moreLinkText: "več",
+  noEventsText: "Ni dogodkov za prikaz"
 };

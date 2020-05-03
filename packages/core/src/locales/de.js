@@ -15,10 +15,10 @@ export default {
     day: "Tag",
     list: "Terminübersicht"
   },
-  weekLabel: "KW",
+  weekText: "KW",
   allDayText: "Ganztägig",
-  eventLimitText: function(n) {
+  moreLinkText: function(n) {
     return "+ weitere " + n;
   },
-  noEventsMessage: "Keine Ereignisse anzuzeigen"
+  noEventsText: "Keine Ereignisse anzuzeigen"
 };

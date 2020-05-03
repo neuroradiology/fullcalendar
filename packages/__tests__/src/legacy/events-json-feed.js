@@ -1,10 +1,11 @@
-import { formatIsoTimeZoneOffset } from '../datelib/utils'
+import XHRMock from 'xhr-mock'
+import { formatIsoTimeZoneOffset } from '../lib/datelib-utils'
 
 describe('events as a json feed', function() {
 
   pushOptions({
-    defaultDate: '2014-05-01',
-    defaultView: 'dayGridMonth'
+    initialDate: '2014-05-01',
+    initialView: 'dayGridMonth'
   })
 
   beforeEach(function() {
@@ -94,7 +95,7 @@ describe('events as a json feed', function() {
         className: 'customeventclass'
       } ],
       timeZone: 'America/Chicago',
-      eventRender: function(arg) {
+      eventDidMount(arg) {
         expect(arg.el).toHaveClass('customeventclass')
         done()
       }
@@ -178,12 +179,13 @@ describe('events as a json feed', function() {
       events: { url: 'my-feed.php' },
       loading: function(bool) {
         loadingCallArgs.push(bool)
-      },
-      _eventsPositioned: function() {
-        expect(loadingCallArgs).toEqual([ true, false ])
-        done()
       }
     })
+
+    setTimeout(function() {
+      expect(loadingCallArgs).toEqual([ true, false ])
+      done()
+    }, 0)
   })
 
   it('has and Event Source object with certain props', function() {

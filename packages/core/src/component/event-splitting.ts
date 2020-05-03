@@ -1,5 +1,5 @@
 import { EventStore, createEmptyEventStore } from '../structs/event-store'
-import { EventDef } from '../structs/event'
+import { EventDef } from '../structs/event-def'
 import { EventInteractionState } from '../interactions/event-interaction-state'
 import { mapHash } from '../util/object'
 import { memoize } from '../util/memoize'
@@ -19,7 +19,7 @@ export interface SplittableProps {
 
 const EMPTY_EVENT_STORE = createEmptyEventStore() // for purecomponents. TODO: keep elsewhere
 
-export default abstract class Splitter<PropsType extends SplittableProps = SplittableProps> {
+export abstract class Splitter<PropsType extends SplittableProps = SplittableProps> {
 
   private getKeysForEventDefs = memoize(this._getKeysForEventDefs)
   private splitDateSelection = memoize(this._splitDateSpan)
@@ -153,8 +153,7 @@ export default abstract class Splitter<PropsType extends SplittableProps = Split
           splitStates[key] = {
             affectedEvents: affectedStores[key] || EMPTY_EVENT_STORE,
             mutatedEvents: mutatedStores[key] || EMPTY_EVENT_STORE,
-            isEvent: interaction.isEvent,
-            origSeg: interaction.origSeg
+            isEvent: interaction.isEvent
           }
         }
       }

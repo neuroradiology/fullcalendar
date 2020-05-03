@@ -1,15 +1,16 @@
 import { DateRange } from '../datelib/date-range'
-import { EventStore, expandRecurring } from '../structs/event-store'
+import { EventStore } from '../structs/event-store'
 import { EventUiHash } from '../component/event-ui'
 import { sliceEventStore, EventRenderRange } from '../component/event-rendering'
 import { DateProfile } from '../DateProfileGenerator'
-import DateComponent, { Seg, EventSegUiInteractionState } from '../component/DateComponent' // TODO: rename EventSegUiInteractionState, move here
+import { Seg, EventSegUiInteractionState } from '../component/DateComponent' // TODO: rename EventSegUiInteractionState, move here
 import { DateSpan, fabricateEventRange } from '../structs/date-span'
 import { EventInteractionState } from '../interactions/event-interaction-state'
 import { Duration } from '../datelib/duration'
 import { memoize } from '../util/memoize'
-import { DateMarker, addMs } from '../datelib/marker'
-import Calendar from '../Calendar'
+import { DateMarker, addMs, addDays } from '../datelib/marker'
+import { ReducerContext } from '../reducers/ReducerContext'
+import { expandRecurring } from '../structs/recurring-event'
 
 export interface SliceableProps {
   dateSelection: DateSpan
@@ -31,7 +32,7 @@ export interface SlicedProps<SegType extends Seg> {
   eventSelection: string
 }
 
-export default abstract class Slicer<SegType extends Seg, ExtraArgs extends any[] = []> {
+export abstract class Slicer<SegType extends Seg, ExtraArgs extends any[] = []> {
 
   private sliceBusinessHours = memoize(this._sliceBusinessHours)
   private sliceDateSelection = memoize(this._sliceDateSpan)
@@ -40,38 +41,38 @@ export default abstract class Slicer<SegType extends Seg, ExtraArgs extends any[
   private sliceEventResize = memoize(this._sliceInteraction)
 
   abstract sliceRange(dateRange: DateRange, ...extraArgs: ExtraArgs): SegType[]
+  protected forceDayIfListItem = false // hack
 
   sliceProps(
     props: SliceableProps,
     dateProfile: DateProfile,
     nextDayThreshold: Duration | null,
-    calendar: Calendar,
-    component: DateComponent<any>, // TODO: kill
+    context: ReducerContext,
     ...extraArgs: ExtraArgs
   ): SlicedProps<SegType> {
     let { eventUiBases } = props
-    let eventSegs = this.sliceEventStore(props.eventStore, eventUiBases, dateProfile, nextDayThreshold, component, ...extraArgs)
+    let eventSegs = this.sliceEventStore(props.eventStore, eventUiBases, dateProfile, nextDayThreshold, ...extraArgs)
 
     return {
-      dateSelectionSegs: this.sliceDateSelection(props.dateSelection, eventUiBases, component, ...extraArgs),
-      businessHourSegs: this.sliceBusinessHours(props.businessHours, dateProfile, nextDayThreshold, calendar, component, ...extraArgs),
+      dateSelectionSegs: this.sliceDateSelection(props.dateSelection, eventUiBases, context, ...extraArgs),
+      businessHourSegs: this.sliceBusinessHours(props.businessHours, dateProfile, nextDayThreshold, context, ...extraArgs),
       fgEventSegs: eventSegs.fg,
       bgEventSegs: eventSegs.bg,
-      eventDrag: this.sliceEventDrag(props.eventDrag, eventUiBases, dateProfile, nextDayThreshold, component, ...extraArgs),
-      eventResize: this.sliceEventResize(props.eventResize, eventUiBases, dateProfile, nextDayThreshold, component, ...extraArgs),
+      eventDrag: this.sliceEventDrag(props.eventDrag, eventUiBases, dateProfile, nextDayThreshold, ...extraArgs),
+      eventResize: this.sliceEventResize(props.eventResize, eventUiBases, dateProfile, nextDayThreshold, ...extraArgs),
       eventSelection: props.eventSelection
     } // TODO: give interactionSegs?
   }
 
   sliceNowDate( // does not memoize
     date: DateMarker,
-    component: DateComponent<any>, // TODO: kill
+    context: ReducerContext,
     ...extraArgs: ExtraArgs
   ): SegType[] {
     return this._sliceDateSpan(
       { range: { start: date, end: addMs(date, 1) }, allDay: false }, // add 1 ms, protect against null range
       {},
-      component,
+      context,
       ...extraArgs
     )
   }
@@ -80,8 +81,7 @@ export default abstract class Slicer<SegType extends Seg, ExtraArgs extends any[
     businessHours: EventStore,
     dateProfile: DateProfile,
     nextDayThreshold: Duration | null,
-    calendar: Calendar,
-    component: DateComponent<any>, // TODO: kill
+    context: ReducerContext,
     ...extraArgs: ExtraArgs
   ): SegType[] {
     if (!businessHours) {
@@ -92,12 +92,11 @@ export default abstract class Slicer<SegType extends Seg, ExtraArgs extends any[
       expandRecurring(
         businessHours,
         computeActiveRange(dateProfile, Boolean(nextDayThreshold)),
-        calendar
+        context
       ),
       {},
       dateProfile,
       nextDayThreshold,
-      component,
       ...extraArgs
     ).bg
   }
@@ -107,7 +106,6 @@ export default abstract class Slicer<SegType extends Seg, ExtraArgs extends any[
     eventUiBases: EventUiHash,
     dateProfile: DateProfile,
     nextDayThreshold: Duration | null,
-    component: DateComponent<any>, // TODO: kill
     ...extraArgs: ExtraArgs
   ): { bg: SegType[], fg: SegType[] } {
     if (eventStore) {
@@ -119,8 +117,8 @@ export default abstract class Slicer<SegType extends Seg, ExtraArgs extends any[
       )
 
       return {
-        bg: this.sliceEventRanges(rangeRes.bg, component, extraArgs),
-        fg: this.sliceEventRanges(rangeRes.fg, component, extraArgs)
+        bg: this.sliceEventRanges(rangeRes.bg, extraArgs),
+        fg: this.sliceEventRanges(rangeRes.fg, extraArgs)
       }
 
     } else {
@@ -133,7 +131,6 @@ export default abstract class Slicer<SegType extends Seg, ExtraArgs extends any[
     eventUiBases: EventUiHash,
     dateProfile: DateProfile,
     nextDayThreshold: Duration | null,
-    component: DateComponent<any>, // TODO: kill
     ...extraArgs: ExtraArgs
   ): EventSegUiInteractionState {
     if (!interaction) {
@@ -148,28 +145,26 @@ export default abstract class Slicer<SegType extends Seg, ExtraArgs extends any[
     )
 
     return {
-      segs: this.sliceEventRanges(rangeRes.fg, component, extraArgs),
+      segs: this.sliceEventRanges(rangeRes.fg, extraArgs),
       affectedInstances: interaction.affectedEvents.instances,
-      isEvent: interaction.isEvent,
-      sourceSeg: interaction.origSeg
+      isEvent: interaction.isEvent
     }
   }
 
   private _sliceDateSpan(
     dateSpan: DateSpan,
     eventUiBases: EventUiHash,
-    component: DateComponent<any>, // TODO: kill
+    context: ReducerContext,
     ...extraArgs: ExtraArgs
   ): SegType[] {
     if (!dateSpan) {
       return []
     }
 
-    let eventRange = fabricateEventRange(dateSpan, eventUiBases, component.context.calendar)
+    let eventRange = fabricateEventRange(dateSpan, eventUiBases, context)
     let segs = this.sliceRange(dateSpan.range, ...extraArgs)
 
     for (let seg of segs) {
-      seg.component = component
       seg.eventRange = eventRange
     }
 
@@ -181,13 +176,12 @@ export default abstract class Slicer<SegType extends Seg, ExtraArgs extends any[
   */
   private sliceEventRanges(
     eventRanges: EventRenderRange[],
-    component: DateComponent<any>, // TODO: kill
     extraArgs: ExtraArgs
   ): SegType[] {
     let segs: SegType[] = []
 
     for (let eventRange of eventRanges) {
-      segs.push(...this.sliceEventRange(eventRange, component, extraArgs))
+      segs.push(...this.sliceEventRange(eventRange, extraArgs))
     }
 
     return segs
@@ -198,13 +192,21 @@ export default abstract class Slicer<SegType extends Seg, ExtraArgs extends any[
   */
   private sliceEventRange(
     eventRange: EventRenderRange,
-    component: DateComponent<any>, // TODO: kill
     extraArgs: ExtraArgs
   ): SegType[] {
-    let segs = this.sliceRange(eventRange.range, ...extraArgs)
+    let dateRange = eventRange.range
+
+    // hack to make multi-day events that are being force-displayed as list-items to take up only one day
+    if (this.forceDayIfListItem && eventRange.ui.display === 'list-item') {
+      dateRange = {
+        start: dateRange.start,
+        end: addDays(dateRange.start, 1)
+      }
+    }
+
+    let segs = this.sliceRange(dateRange, ...extraArgs)
 
     for (let seg of segs) {
-      seg.component = component
       seg.eventRange = eventRange
       seg.isStart = eventRange.isStart && seg.isStart
       seg.isEnd = eventRange.isEnd && seg.isEnd
@@ -216,7 +218,7 @@ export default abstract class Slicer<SegType extends Seg, ExtraArgs extends any[
 }
 
 /*
-for incorporating minTime/maxTime if appropriate
+for incorporating slotMinTime/slotMaxTime if appropriate
 TODO: should be part of DateProfile!
 TimelineDateProfile already does this btw
 */
@@ -228,7 +230,7 @@ function computeActiveRange(dateProfile: DateProfile, isComponentAllDay: boolean
   }
 
   return {
-    start: addMs(range.start, dateProfile.minTime.milliseconds),
-    end: addMs(range.end, dateProfile.maxTime.milliseconds - 864e5) // 864e5 = ms in a day
+    start: addMs(range.start, dateProfile.slotMinTime.milliseconds),
+    end: addMs(range.end, dateProfile.slotMaxTime.milliseconds - 864e5) // 864e5 = ms in a day
   }
 }

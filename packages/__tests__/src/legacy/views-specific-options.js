@@ -1,15 +1,15 @@
 import { createPlugin } from '@fullcalendar/core'
-import DayGridPlugin, { DayGridView } from '@fullcalendar/daygrid'
+import dayGridPlugin from '@fullcalendar/daygrid'
 
 describe('view-specific options', function() {
 
   pushOptions({
-    header: {
+    headerToolbar: {
       left: 'prev,next',
       center: 'title',
       right: 'dayGridMonth,dayGridWeek,dayGridDay,timeGridWeek,timeGridDay'
     },
-    defaultView: 'dayGridMonth',
+    initialView: 'dayGridMonth',
     titleFormat: function() { return 'default' },
     views: { }
   })
@@ -123,45 +123,16 @@ describe('view-specific options', function() {
     })
   })
 
-  it('can implicitly target a View subclass', function() {
-
-    class SuperDayGridView extends DayGridView {
-    }
-
+  it('views that explicitly extend others inherit options', function() {
     initCalendar({
       plugins: [
-        DayGridPlugin,
+        dayGridPlugin,
         createPlugin({
           views: {
-            superBasic: SuperDayGridView
-          }
-        })
-      ],
-      views: {
-        dayGrid: {
-          titleFormat: function() { return 'special!!!' }
-        }
-      }
-    })
-
-    testEachView({
-      superBasic: 'special!!!',
-      dayGridMonth: 'special!!!',
-      dayGridDay: 'special!!!'
-    })
-  })
-
-  it('can implicitly target an old-school View subclass', function() {
-
-    function SuperDayGridView() { DayGridView.apply(this, arguments) }
-    SuperDayGridView.prototype = Object.create(DayGridView.prototype)
-
-    initCalendar({
-      plugins: [
-        DayGridPlugin,
-        createPlugin({
-          views: {
-            superBasic: SuperDayGridView
+            superBasic: {
+              type: 'dayGrid', // explicitly extend
+              content: 'hello world'
+            }
           }
         })
       ],

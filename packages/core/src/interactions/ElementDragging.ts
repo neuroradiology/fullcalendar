@@ -1,4 +1,4 @@
-import EmitterMixin from '../common/EmitterMixin'
+import { Emitter } from '../common/Emitter'
 
 /*
 An abstraction for a dragging interaction originating on an event.
@@ -13,12 +13,12 @@ subclasses must emit:
 - pointerup
 - dragend
 */
-export default abstract class ElementDragging { // TODO: rename to *Interface?
+export abstract class ElementDragging { // TODO: rename to *Interface?
 
-  emitter: EmitterMixin
+  emitter: Emitter
 
   constructor(el: HTMLElement) {
-    this.emitter = new EmitterMixin()
+    this.emitter = new Emitter()
   }
 
   destroy() {

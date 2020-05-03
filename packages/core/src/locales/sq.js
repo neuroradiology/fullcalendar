@@ -14,10 +14,10 @@ export default {
     day: "Ditë",
     list: "Listë"
   },
-  weekLabel: "Ja",
-  allDayHtml: "Gjithë<br/>ditën",
-  eventLimitText: function(n) {
+  weekText: "Ja",
+  allDayText: "Gjithë ditën",
+  moreLinkText: function(n) {
     return "+më tepër " + n;
   },
-  noEventsMessage: "Nuk ka evente për të shfaqur"
+  noEventsText: "Nuk ka evente për të shfaqur"
 };

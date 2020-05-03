@@ -1,9 +1,10 @@
+import XHRMock from 'xhr-mock'
 
 describe('event feed params', function() {
 
   pushOptions({
-    defaultDate: '2014-05-01',
-    defaultView: 'dayGridMonth'
+    initialDate: '2014-05-01',
+    initialView: 'dayGridMonth'
   })
 
   beforeEach(function() {

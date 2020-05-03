@@ -1,0 +1,72 @@
+
+.fc {
+  font-size: 1em;
+
+  // layout of immediate children
+  display: flex;
+  flex-direction: column;
+
+  &,
+  *,
+  *:before,
+  *:after {
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+  }
+
+
+  table {
+    border-spacing: 0;
+    font-size: 1em; /* normalize cross-browser */
+  }
+
+  th {
+    text-align: center; // is this needed?
+  }
+
+  th, td {
+    vertical-align: top;
+  }
+
+  a[data-navlink] {
+    cursor: pointer;
+  }
+
+  a[data-navlink]:hover {
+    text-decoration: underline;
+  }
+
+}
+
+.fc-direction-ltr {
+  direction: ltr;
+  text-align: left;
+}
+
+.fc-direction-rtl {
+  direction: rtl;
+  text-align: right;
+}
+
+.fc-theme-standard {
+
+  td, th {
+    border: 1px solid $fc-theme-standard-border-color;
+    border: 1px solid var(--fc-theme-standard-border-color, $fc-theme-standard-border-color);
+  }
+
+}
+
+.fc-media-print {
+  max-width: 100%;
+}
+
+
+// for FF, which doesn't expand a 100% div within a table cell. use absolute positioning
+// inner-wrappers are responsible for being absolute
+.fc-liquid-hack {
+  td, th {
+    position: relative;
+  }
+}

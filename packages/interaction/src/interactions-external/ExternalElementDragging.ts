@@ -6,17 +6,19 @@ import {
   createEmptyEventStore, eventTupleToStore,
   config,
   DateSpan, DatePointApi,
-  Calendar,
   EventInteractionState,
   DragMetaInput, DragMeta, parseDragMeta,
   EventApi,
   elementMatches,
   enableCursor, disableCursor,
   isInteractionValid,
-  View,
-  ElementDragging
+  ElementDragging,
+  ViewApi,
+  ReducerContext,
+  buildDatePointApiWithContext,
+  getDefaultEventEnd
 } from '@fullcalendar/core'
-import HitDragging from '../interactions/HitDragging'
+import { HitDragging } from '../interactions/HitDragging'
 import { __assign } from 'tslib'
 
 export type DragMetaGenerator = DragMetaInput | ((el: HTMLElement) => DragMetaInput)
@@ -24,7 +26,7 @@ export type DragMetaGenerator = DragMetaInput | ((el: HTMLElement) => DragMetaIn
 export interface ExternalDropApi extends DatePointApi {
   draggedEl: HTMLElement
   jsEvent: UIEvent
-  view: View
+  view: ViewApi
 }
 
 
@@ -33,10 +35,10 @@ Given an already instantiated draggable object for one-or-more elements,
 Interprets any dragging as an attempt to drag an events that lives outside
 of a calendar onto a calendar.
 */
-export default class ExternalElementDragging {
+export class ExternalElementDragging {
 
   hitDragging: HitDragging
-  receivingCalendar: Calendar | null = null
+  receivingContext: ReducerContext | null = null
   droppableEvent: EventTuple | null = null // will exist for all drags, even if create:false
   suppliedDragMeta: DragMetaGenerator | null = null
   dragMeta: DragMeta | null = null
@@ -68,29 +70,28 @@ export default class ExternalElementDragging {
 
   handleHitUpdate = (hit: Hit | null, isFinal: boolean, ev: PointerDragEvent) => {
     let { dragging } = this.hitDragging
-    let receivingCalendar: Calendar | null = null
+    let receivingContext: ReducerContext | null = null
     let droppableEvent: EventTuple | null = null
     let isInvalid = false
     let interaction: EventInteractionState = {
       affectedEvents: createEmptyEventStore(),
       mutatedEvents: createEmptyEventStore(),
-      isEvent: this.dragMeta!.create,
-      origSeg: null
+      isEvent: this.dragMeta!.create
     }
 
     if (hit) {
-      receivingCalendar = hit.component.context.calendar
+      receivingContext = hit.component.context
 
-      if (this.canDropElOnCalendar(ev.subjectEl as HTMLElement, receivingCalendar)) {
+      if (this.canDropElOnCalendar(ev.subjectEl as HTMLElement, receivingContext)) {
 
         droppableEvent = computeEventForDateSpan(
           hit.dateSpan,
           this.dragMeta!,
-          receivingCalendar
+          receivingContext
         )
 
         interaction.mutatedEvents = eventTupleToStore(droppableEvent)
-        isInvalid = !isInteractionValid(interaction, receivingCalendar)
+        isInvalid = !isInteractionValid(interaction, receivingContext)
 
         if (isInvalid) {
           interaction.mutatedEvents = createEmptyEventStore()
@@ -99,12 +100,12 @@ export default class ExternalElementDragging {
       }
     }
 
-    this.displayDrag(receivingCalendar, interaction)
+    this.displayDrag(receivingContext, interaction)
 
     // show mirror if no already-rendered mirror element OR if we are shutting down the mirror (?)
     // TODO: wish we could somehow wait for dispatch to guarantee render
     dragging.setMirrorIsVisible(
-      isFinal || !droppableEvent || !document.querySelector('.fc-mirror')
+      isFinal || !droppableEvent || !document.querySelector('.fc-event-mirror')
     )
 
     if (!isInvalid) {
@@ -116,80 +117,78 @@ export default class ExternalElementDragging {
     if (!isFinal) {
       dragging.setMirrorNeedsRevert(!droppableEvent)
 
-      this.receivingCalendar = receivingCalendar
+      this.receivingContext = receivingContext
       this.droppableEvent = droppableEvent
     }
   }
 
   handleDragEnd = (pev: PointerDragEvent) => {
-    let { receivingCalendar, droppableEvent } = this
+    let { receivingContext, droppableEvent } = this
 
     this.clearDrag()
 
-    if (receivingCalendar && droppableEvent) {
+    if (receivingContext && droppableEvent) {
       let finalHit = this.hitDragging.finalHit!
-      let finalView = finalHit.component.context.view
+      let finalView = finalHit.component.context.viewApi
       let dragMeta = this.dragMeta!
       let arg = {
-        ...receivingCalendar.buildDatePointApi(finalHit.dateSpan),
+        ...buildDatePointApiWithContext(finalHit.dateSpan, receivingContext),
         draggedEl: pev.subjectEl as HTMLElement,
         jsEvent: pev.origEvent as MouseEvent, // Is this always a mouse event? See #4655
         view: finalView
       }
-      receivingCalendar.publiclyTrigger('drop', [ arg ])
+      receivingContext.emitter.trigger('drop', arg)
 
       if (dragMeta.create) {
-        receivingCalendar.dispatch({
+        receivingContext.dispatch({
           type: 'MERGE_EVENTS',
           eventStore: eventTupleToStore(droppableEvent)
         })
 
         if (pev.isTouch) {
-          receivingCalendar.dispatch({
+          receivingContext.dispatch({
             type: 'SELECT_EVENT',
             eventInstanceId: droppableEvent.instance.instanceId
           })
         }
 
         // signal that an external event landed
-        receivingCalendar.publiclyTrigger('eventReceive', [
-          {
-            draggedEl: pev.subjectEl as HTMLElement,
-            event: new EventApi(
-              receivingCalendar,
-              droppableEvent.def,
-              droppableEvent.instance
-            ),
-            view: finalView
-          }
-        ])
+        receivingContext.emitter.trigger('eventReceive', {
+          draggedEl: pev.subjectEl as HTMLElement,
+          event: new EventApi(
+            receivingContext,
+            droppableEvent.def,
+            droppableEvent.instance
+          ),
+          view: finalView
+        })
       }
     }
 
-    this.receivingCalendar = null
+    this.receivingContext = null
     this.droppableEvent = null
   }
 
-  displayDrag(nextCalendar: Calendar | null, state: EventInteractionState) {
-    let prevCalendar = this.receivingCalendar
+  displayDrag(nextContext: ReducerContext | null, state: EventInteractionState) {
+    let prevContext = this.receivingContext
 
-    if (prevCalendar && prevCalendar !== nextCalendar) {
-      prevCalendar.dispatch({ type: 'UNSET_EVENT_DRAG' })
+    if (prevContext && prevContext !== nextContext) {
+      prevContext.dispatch({ type: 'UNSET_EVENT_DRAG' })
     }
 
-    if (nextCalendar) {
-      nextCalendar.dispatch({ type: 'SET_EVENT_DRAG', state })
+    if (nextContext) {
+      nextContext.dispatch({ type: 'SET_EVENT_DRAG', state })
     }
   }
 
   clearDrag() {
-    if (this.receivingCalendar) {
-      this.receivingCalendar.dispatch({ type: 'UNSET_EVENT_DRAG' })
+    if (this.receivingContext) {
+      this.receivingContext.dispatch({ type: 'UNSET_EVENT_DRAG' })
     }
   }
 
-  canDropElOnCalendar(el: HTMLElement, receivingCalendar: Calendar): boolean {
-    let dropAccept = receivingCalendar.opt('dropAccept')
+  canDropElOnCalendar(el: HTMLElement, receivingContext: ReducerContext): boolean {
+    let dropAccept = receivingContext.options.dropAccept
 
     if (typeof dropAccept === 'function') {
       return dropAccept(el)
@@ -205,10 +204,10 @@ export default class ExternalElementDragging {
 // Utils for computing event store from the DragMeta
 // ----------------------------------------------------------------------------------------------------
 
-function computeEventForDateSpan(dateSpan: DateSpan, dragMeta: DragMeta, calendar: Calendar): EventTuple {
+function computeEventForDateSpan(dateSpan: DateSpan, dragMeta: DragMeta, context: ReducerContext): EventTuple {
   let defProps = { ...dragMeta.leftoverProps }
 
-  for (let transform of calendar.pluginSystem.hooks.externalDefTransforms) {
+  for (let transform of context.pluginHooks.externalDefTransforms) {
     __assign(defProps, transform(dateSpan, dragMeta))
   }
 
@@ -216,8 +215,8 @@ function computeEventForDateSpan(dateSpan: DateSpan, dragMeta: DragMeta, calenda
     defProps,
     dragMeta.sourceId,
     dateSpan.allDay,
-    calendar.opt('forceEventDuration') || Boolean(dragMeta.duration), // hasEnd
-    calendar
+    context.options.forceEventDuration || Boolean(dragMeta.duration), // hasEnd
+    context
   )
 
   let start = dateSpan.range.start
@@ -225,12 +224,12 @@ function computeEventForDateSpan(dateSpan: DateSpan, dragMeta: DragMeta, calenda
   // only rely on time info if drop zone is all-day,
   // otherwise, we already know the time
   if (dateSpan.allDay && dragMeta.startTime) {
-    start = calendar.dateEnv.add(start, dragMeta.startTime)
+    start = context.dateEnv.add(start, dragMeta.startTime)
   }
 
   let end = dragMeta.duration ?
-    calendar.dateEnv.add(start, dragMeta.duration) :
-    calendar.getDefaultEventEnd(dateSpan.allDay, start)
+    context.dateEnv.add(start, dragMeta.duration) :
+    getDefaultEventEnd(dateSpan.allDay, start, context)
 
   let instance = createEventInstance(def.defId, { start, end })
 

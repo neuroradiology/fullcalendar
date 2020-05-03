@@ -13,17 +13,18 @@ import {
   EventResizeJoinTransforms,
   Interaction, InteractionSettings, interactionSettingsToStore
 } from '@fullcalendar/core'
-import HitDragging, { isHitsEqual } from './HitDragging'
-import FeaturefulElementDragging from '../dnd/FeaturefulElementDragging'
+import { HitDragging, isHitsEqual } from './HitDragging'
+import { FeaturefulElementDragging } from '../dnd/FeaturefulElementDragging'
 import { __assign } from 'tslib'
 
 
-export default class EventDragging extends Interaction {
+export class EventResizing extends Interaction {
 
   dragging: FeaturefulElementDragging
   hitDragging: HitDragging
 
   // internal state
+  draggingSegEl: HTMLElement | null = null
   draggingSeg: Seg | null = null // TODO: rename to resizingSeg? subjectSeg?
   eventRange: EventRenderRange | null = null
   relevantEvents: EventStore | null = null
@@ -34,8 +35,8 @@ export default class EventDragging extends Interaction {
     super(settings)
     let { component } = settings
 
-    let dragging = this.dragging = new FeaturefulElementDragging(component.el)
-    dragging.pointer.selector = '.fc-resizer'
+    let dragging = this.dragging = new FeaturefulElementDragging(settings.el)
+    dragging.pointer.selector = '.fc-event-resizer'
     dragging.touchScrollAllowed = false
     dragging.autoScroller.isEnabled = component.context.options.dragScroll
 
@@ -52,7 +53,8 @@ export default class EventDragging extends Interaction {
 
   handlePointerDown = (ev: PointerDragEvent) => {
     let { component } = this
-    let seg = this.querySeg(ev)!
+    let segEl = this.querySegEl(ev)
+    let seg = getElSeg(segEl)
     let eventRange = this.eventRange = seg.eventRange!
 
     this.dragging.minDistance = component.context.options.eventDragMinDistance
@@ -65,29 +67,29 @@ export default class EventDragging extends Interaction {
   }
 
   handleDragStart = (ev: PointerDragEvent) => {
-    let { calendar, view } = this.component.context
+    let { context } = this.component
     let eventRange = this.eventRange!
 
     this.relevantEvents = getRelevantEvents(
-      calendar.state.eventStore,
+      context.getCurrentState().eventStore,
       this.eventRange.instance!.instanceId
     )
 
-    this.draggingSeg = this.querySeg(ev)
+    let segEl = this.querySegEl(ev)
+    this.draggingSegEl = segEl
+    this.draggingSeg = getElSeg(segEl)
 
-    calendar.unselect()
-    calendar.publiclyTrigger('eventResizeStart', [
-      {
-        el: this.draggingSeg.el,
-        event: new EventApi(calendar, eventRange.def, eventRange.instance),
-        jsEvent: ev.origEvent as MouseEvent, // Is this always a mouse event? See #4655
-        view
-      }
-    ])
+    context.calendarApi.unselect()
+    context.emitter.trigger('eventResizeStart', {
+      el: segEl,
+      event: new EventApi(context, eventRange.def, eventRange.instance),
+      jsEvent: ev.origEvent as MouseEvent, // Is this always a mouse event? See #4655
+      view: context.viewApi
+    })
   }
 
   handleHitUpdate = (hit: Hit | null, isFinal: boolean, ev: PointerDragEvent) => {
-    let calendar = this.component.context.calendar
+    let { context } = this.component
     let relevantEvents = this.relevantEvents!
     let initialHit = this.hitDragging.initialHit!
     let eventInstance = this.eventRange.instance!
@@ -97,22 +99,21 @@ export default class EventDragging extends Interaction {
     let interaction: EventInteractionState = {
       affectedEvents: relevantEvents,
       mutatedEvents: createEmptyEventStore(),
-      isEvent: true,
-      origSeg: this.draggingSeg
+      isEvent: true
     }
 
     if (hit) {
       mutation = computeMutation(
         initialHit,
         hit,
-        (ev.subjectEl as HTMLElement).classList.contains('fc-start-resizer'),
+        (ev.subjectEl as HTMLElement).classList.contains('fc-event-resizer-start'),
         eventInstance.range,
-        calendar.pluginSystem.hooks.eventResizeJoinTransforms
+        context.pluginHooks.eventResizeJoinTransforms
       )
     }
 
     if (mutation) {
-      mutatedRelevantEvents = applyMutationToEventStore(relevantEvents, calendar.eventUiBases, mutation, calendar)
+      mutatedRelevantEvents = applyMutationToEventStore(relevantEvents, context.getCurrentState().eventUiBases, mutation, context)
       interaction.mutatedEvents = mutatedRelevantEvents
 
       if (!this.component.isInteractionValid(interaction)) {
@@ -125,12 +126,12 @@ export default class EventDragging extends Interaction {
     }
 
     if (mutatedRelevantEvents) {
-      calendar.dispatch({
+      context.dispatch({
         type: 'SET_EVENT_RESIZE',
         state: interaction
       })
     } else {
-      calendar.dispatch({ type: 'UNSET_EVENT_RESIZE' })
+      context.dispatch({ type: 'UNSET_EVENT_RESIZE' })
     }
 
     if (!isInvalid) {
@@ -151,52 +152,48 @@ export default class EventDragging extends Interaction {
   }
 
   handleDragEnd = (ev: PointerDragEvent) => {
-    let { calendar, view } = this.component.context
+    let { context } = this.component
     let eventDef = this.eventRange!.def
     let eventInstance = this.eventRange!.instance
-    let eventApi = new EventApi(calendar, eventDef, eventInstance)
+    let eventApi = new EventApi(context, eventDef, eventInstance)
     let relevantEvents = this.relevantEvents!
     let mutatedRelevantEvents = this.mutatedRelevantEvents!
 
-    calendar.publiclyTrigger('eventResizeStop', [
-      {
-        el: this.draggingSeg.el,
-        event: eventApi,
-        jsEvent: ev.origEvent as MouseEvent, // Is this always a mouse event? See #4655
-        view
-      }
-    ])
+    context.emitter.trigger('eventResizeStop', {
+      el: this.draggingSegEl,
+      event: eventApi,
+      jsEvent: ev.origEvent as MouseEvent, // Is this always a mouse event? See #4655
+      view: context.viewApi
+    })
 
     if (this.validMutation) {
-      calendar.dispatch({
+      context.dispatch({
         type: 'MERGE_EVENTS',
         eventStore: mutatedRelevantEvents
       })
 
-      calendar.publiclyTrigger('eventResize', [
-        {
-          el: this.draggingSeg.el,
-          startDelta: this.validMutation.startDelta || createDuration(0),
-          endDelta: this.validMutation.endDelta || createDuration(0),
-          prevEvent: eventApi,
-          event: new EventApi( // the data AFTER the mutation
-            calendar,
-            mutatedRelevantEvents.defs[eventDef.defId],
-            eventInstance ? mutatedRelevantEvents.instances[eventInstance.instanceId] : null
-          ),
-          revert: function() {
-            calendar.dispatch({
-              type: 'MERGE_EVENTS',
-              eventStore: relevantEvents
-            })
-          },
-          jsEvent: ev.origEvent,
-          view
-        }
-      ])
+      context.emitter.trigger('eventResize', {
+        el: this.draggingSegEl,
+        startDelta: this.validMutation.startDelta || createDuration(0),
+        endDelta: this.validMutation.endDelta || createDuration(0),
+        prevEvent: eventApi,
+        event: new EventApi( // the data AFTER the mutation
+          context,
+          mutatedRelevantEvents.defs[eventDef.defId],
+          eventInstance ? mutatedRelevantEvents.instances[eventInstance.instanceId] : null
+        ),
+        revert: function() {
+          context.dispatch({
+            type: 'MERGE_EVENTS',
+            eventStore: relevantEvents
+          })
+        },
+        jsEvent: ev.origEvent,
+        view: context.viewApi
+      })
 
     } else {
-      calendar.publiclyTrigger('_noEventResize')
+      context.emitter.trigger('_noEventResize')
     }
 
     // reset all internal state
@@ -207,8 +204,8 @@ export default class EventDragging extends Interaction {
     // okay to keep eventInstance around. useful to set it in handlePointerDown
   }
 
-  querySeg(ev: PointerDragEvent): Seg | null {
-    return getElSeg(elementClosest(ev.subjectEl as HTMLElement, this.component.fgSegSelector))
+  querySegEl(ev: PointerDragEvent) {
+    return elementClosest(ev.subjectEl as HTMLElement, '.fc-event')
   }
 
 }

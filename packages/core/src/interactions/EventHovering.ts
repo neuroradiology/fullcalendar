@@ -1,5 +1,5 @@
 import { listenToHoverBySelector } from '../util/dom-event'
-import EventApi from '../api/EventApi'
+import { EventApi } from '../api/EventApi'
 import { getElSeg } from '../component/event-rendering'
 import { Interaction, InteractionSettings } from './interaction'
 
@@ -7,7 +7,7 @@ import { Interaction, InteractionSettings } from './interaction'
 Triggers events and adds/removes core classNames when the user's pointer
 enters/leaves event-elements of a component.
 */
-export default class EventHovering extends Interaction {
+export class EventHovering extends Interaction {
 
   removeHoverListeners: () => void
   currentSegEl: HTMLElement
@@ -17,19 +17,19 @@ export default class EventHovering extends Interaction {
     let { component } = settings
 
     this.removeHoverListeners = listenToHoverBySelector(
-      component.el,
-      component.fgSegSelector + ',' + component.bgSegSelector,
+      settings.el,
+      '.fc-event', // on both fg and bg events
       this.handleSegEnter,
       this.handleSegLeave
     )
 
     // how to make sure component already has context?
-    component.context.calendar.on('eventElRemove', this.handleEventElRemove)
+    component.context.emitter.on('eventElRemove', this.handleEventElRemove)
   }
 
   destroy() {
     this.removeHoverListeners()
-    this.component.context.calendar.off('eventElRemove', this.handleEventElRemove)
+    this.component.context.emitter.off('eventElRemove', this.handleEventElRemove)
   }
 
   // for simulating an eventMouseLeave when the event el is destroyed while mouse is over it
@@ -41,7 +41,7 @@ export default class EventHovering extends Interaction {
 
   handleSegEnter = (ev: Event, segEl: HTMLElement) => {
     if (getElSeg(segEl)) { // TODO: better way to make sure not hovering over more+ link or its wrapper
-      segEl.classList.add('fc-allow-mouse-resize')
+      segEl.classList.add('fc-event-resizable-mouse')
       this.currentSegEl = segEl
       this.triggerEvent('eventMouseEnter', ev, segEl)
     }
@@ -49,7 +49,7 @@ export default class EventHovering extends Interaction {
 
   handleSegLeave = (ev: Event | null, segEl: HTMLElement) => {
     if (this.currentSegEl) {
-      segEl.classList.remove('fc-allow-mouse-resize')
+      segEl.classList.remove('fc-event-resizable-mouse')
       this.currentSegEl = null
       this.triggerEvent('eventMouseLeave', ev, segEl)
     }
@@ -57,22 +57,20 @@ export default class EventHovering extends Interaction {
 
   triggerEvent(publicEvName: 'eventMouseEnter' | 'eventMouseLeave', ev: Event | null, segEl: HTMLElement) {
     let { component } = this
-    let { calendar, view } = component.context
+    let { context } = component
     let seg = getElSeg(segEl)!
 
     if (!ev || component.isValidSegDownEl(ev.target as HTMLElement)) {
-      calendar.publiclyTrigger(publicEvName, [
-        {
-          el: segEl,
-          event: new EventApi(
-            calendar,
-            seg.eventRange.def,
-            seg.eventRange.instance
-          ),
-          jsEvent: ev as MouseEvent, // Is this always a mouse event? See #4655
-          view
-        }
-      ])
+      context.emitter.trigger(publicEvName, {
+        el: segEl,
+        event: new EventApi(
+          context,
+          seg.eventRange.def,
+          seg.eventRange.instance
+        ),
+        jsEvent: ev as MouseEvent, // Is this always a mouse event? See #4655
+        view: context.viewApi
+      })
     }
   }
 

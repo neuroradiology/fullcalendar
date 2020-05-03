@@ -14,8 +14,8 @@ export default {
     day: "Dag",
     list: "Terminiwwersiicht"
   },
-  weekLabel: "W",
+  weekText: "W",
   allDayText: "Ganzen Dag",
-  eventLimitText: "méi",
-  noEventsMessage: "Nee Evenementer ze affichéieren"
+  moreLinkText: "méi",
+  noEventsText: "Nee Evenementer ze affichéieren"
 };

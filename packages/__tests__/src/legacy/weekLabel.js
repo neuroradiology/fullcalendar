@@ -1,51 +1,55 @@
 import esLocale from '@fullcalendar/core/locales/es'
+import { TimeGridViewWrapper } from '../lib/wrappers/TimeGridViewWrapper'
 
-describe('weekLabel', function() {
-
+describe('weekText', function() { // TODO: rename file
   pushOptions({
     weekNumbers: true
   })
 
-  function getRenderedWeekNumberTitle() {
-    // works for both kinds of views
-    var text = $('th.fc-week-number').text()
-    return text.replace(/\d/g, '').trim()
-  }
+  ;[ 'timeGridWeek' ].forEach(function(viewName) {
 
-  [ 'dayGridWeek', 'timeGridWeek' ].forEach(function(viewName) {
     describe('when views is ' + viewName, function() {
-
       pushOptions({
-        defaultView: viewName
+        initialView: viewName
       })
 
       it('renders correctly by default', function() {
-        initCalendar()
-        expect(getRenderedWeekNumberTitle()).toBe('W')
+        let calendar = initCalendar()
+        expectWeekNumberTitle(calendar, 'W')
       })
 
       it('renders correctly when unspecified and when locale is customized', function() {
-        initCalendar({
+        let calendar = initCalendar({
           locale: esLocale
         })
-        expect(getRenderedWeekNumberTitle()).toBe('Sm')
+        expectWeekNumberTitle(calendar, 'Sm')
       })
 
       it('renders correctly when customized and LTR', function() {
-        initCalendar({
-          dir: 'ltr',
-          weekLabel: 'YO'
+        let calendar = initCalendar({
+          direction: 'ltr',
+          weekText: 'YO'
         })
-        expect(getRenderedWeekNumberTitle()).toBe('YO')
+        expectWeekNumberTitle(calendar, 'YO')
       })
 
       it('renders correctly when customized and RTL', function() {
-        initCalendar({
-          dir: 'rtl',
-          weekLabel: 'YO'
+        let calendar = initCalendar({
+          direction: 'rtl',
+          weekText: 'YO'
         })
-        expect(getRenderedWeekNumberTitle()).toBe('YO')
+        expectWeekNumberTitle(calendar, 'YO')
       })
     })
+
+
+    function expectWeekNumberTitle(calendar, title) {
+      let viewWrapper = new TimeGridViewWrapper(calendar)
+      let text = viewWrapper.getHeaderWeekText()
+        .replace(/\d/g, '').trim() // remove the number
+
+      expect(text).toBe(title)
+    }
+
   })
 })

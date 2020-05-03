@@ -1,4 +1,4 @@
-import { getEventEls } from './../event-render/EventRenderUtils'
+import { CalendarWrapper } from '../lib/wrappers/CalendarWrapper'
 
 describe('addEventSource', function() {
   var eventArray = [
@@ -8,8 +8,8 @@ describe('addEventSource', function() {
   ]
 
   pushOptions({
-    defaultDate: '2014-06-24',
-    defaultView: 'dayGridMonth'
+    initialDate: '2014-06-24',
+    initialView: 'dayGridMonth'
   })
 
 
@@ -50,7 +50,7 @@ describe('addEventSource', function() {
     )
   })
 
-  it('correctly adds an extended array source', function(done) {
+  it('correctly adds an extended func source', function(done) {
     go(
       function() {
         currentCalendar.addEventSource({
@@ -69,42 +69,36 @@ describe('addEventSource', function() {
 
 
   function go(addFunc, extraTestFunc, doneFunc) {
-    var callCnt = 0
-    var options = {}
-    options._eventsPositioned = function() {
-      callCnt++
-      if (callCnt === 2) { // once for initial render. second time for addEventSource
+    initCalendar()
+    addFunc()
 
-        checkAllEvents()
-        if (extraTestFunc) {
-          extraTestFunc()
-        }
-
-        // move the calendar back out of view, then back in (for issue 2191)
-        currentCalendar.next()
-        currentCalendar.prev()
-
-        // otherwise, prev/next would be cancelled out by doneFunc's calendar destroy
-        setTimeout(function() {
-
-          checkAllEvents()
-          if (extraTestFunc) {
-            extraTestFunc()
-          }
-
-          doneFunc()
-        }, 0)
-      }
+    checkAllEvents()
+    if (extraTestFunc) {
+      extraTestFunc()
     }
 
-    initCalendar(options)
-    addFunc()
+    // move the calendar back out of view, then back in (for issue 2191)
+    currentCalendar.next()
+    currentCalendar.prev()
+
+    // otherwise, prev/next would be cancelled out by doneFunc's calendar destroy
+    setTimeout(function() {
+
+      checkAllEvents()
+      if (extraTestFunc) {
+        extraTestFunc()
+      }
+
+      doneFunc()
+    }, 0)
   }
 
   // Checks to make sure all events have been rendered and that the calendar
   // has internal info on all the events.
   function checkAllEvents() {
     expect(currentCalendar.getEvents().length).toEqual(3)
-    expect(getEventEls().length).toEqual(3)
+
+    let calendarWrapper = new CalendarWrapper(currentCalendar)
+    expect(calendarWrapper.getEventEls().length).toEqual(3)
   }
 })

@@ -1,26 +1,13 @@
-import Theme from './Theme'
+import { Theme } from './Theme'
 
-export default class StandardTheme extends Theme {
+export class StandardTheme extends Theme {
 }
 
 StandardTheme.prototype.classes = {
-  widget: 'fc-unthemed',
-  widgetHeader: 'fc-widget-header',
-  widgetContent: 'fc-widget-content',
-
+  root: 'fc-theme-standard', // TODO: compute this off of registered theme name
   buttonGroup: 'fc-button-group',
   button: 'fc-button fc-button-primary',
-  buttonActive: 'fc-button-active',
-
-  popoverHeader: 'fc-widget-header',
-  popoverContent: 'fc-widget-content',
-
-  // day grid
-  headerRow: 'fc-widget-header',
-  dayRow: 'fc-widget-content',
-
-  // list view
-  listView: 'fc-widget-content'
+  buttonActive: 'fc-button-active'
 }
 
 StandardTheme.prototype.baseIconClass = 'fc-icon'
@@ -30,6 +17,12 @@ StandardTheme.prototype.iconClasses = {
   next: 'fc-icon-chevron-right',
   prevYear: 'fc-icon-chevrons-left',
   nextYear: 'fc-icon-chevrons-right'
+}
+StandardTheme.prototype.rtlIconClasses = {
+  prev: 'fc-icon-chevron-right',
+  next: 'fc-icon-chevron-left',
+  prevYear: 'fc-icon-chevrons-right',
+  nextYear: 'fc-icon-chevrons-left'
 }
 
 StandardTheme.prototype.iconOverrideOption = 'buttonIcons'

@@ -1,11 +1,12 @@
-import { getDayGridRowElAtIndex } from '../view-render/DayGridRenderUtils'
-import { getSingleEl } from '../event-render/EventRenderUtils'
-import { directionallyTestSeg } from '../event-render/DayGridEventRenderUtils'
+import { directionallyTestSeg } from '../lib/DayGridEventRenderUtils'
+import { DayGridViewWrapper } from '../lib/wrappers/DayGridViewWrapper'
+import { CalendarWrapper } from '../lib/wrappers/CalendarWrapper'
+
 
 describe('DayGrid event rendering', function() {
   pushOptions({
-    defaultDate: '2014-08-01', // 2014-07-27 - 2014-10-07 (excl)
-    defaultView: 'dayGridMonth'
+    initialDate: '2014-08-01', // 2014-07-27 - 2014-10-07 (excl)
+    initialView: 'dayGridMonth'
   })
 
   describe('when LTR', function() {
@@ -15,7 +16,7 @@ describe('DayGrid event rendering', function() {
     initMonthTesting('rtl')
   })
 
-  function initMonthTesting(dir) {
+  function initMonthTesting(direction) {
     it('correctly renders an event starting before view\'s start', function() {
       var options = {}
       options.events = [
@@ -185,60 +186,63 @@ describe('DayGrid event rendering', function() {
     })
 
     function testSeg(calendarOptions, testSegOptions) {
-      calendarOptions.dir = dir
+      calendarOptions.direction = direction
       initCalendar(calendarOptions)
-      directionallyTestSeg(testSegOptions, dir)
+      directionallyTestSeg(testSegOptions)
     }
   }
 
   it('rendering of events across weeks stays consistent', function() {
-    var options = {}
-    options.events = [
-      {
-        title: 'event1',
-        start: '2014-08-01',
-        end: '2014-08-04',
-        className: 'event1'
-      },
-      {
-        title: 'event2',
-        start: '2014-08-02',
-        end: '2014-08-05',
-        className: 'event2'
-      }
-    ]
-    initCalendar(options)
-    var row0 = getDayGridRowElAtIndex(0)
-    var row0event1 = row0.find('.event1')
-    var row0event2 = row0.find('.event2')
-    var row1 = getDayGridRowElAtIndex(1)
-    var row1event1 = row1.find('.event1')
-    var row1event2 = row1.find('.event2')
-    expect(row0event1.offset().top).toBeLessThan(row0event2.offset().top)
-    expect(row1event1.offset().top).toBeLessThan(row1event2.offset().top)
+    let calendar = initCalendar({
+      events: [
+        {
+          title: 'event1',
+          start: '2014-08-01',
+          end: '2014-08-04',
+          className: 'event1'
+        },
+        {
+          title: 'event2',
+          start: '2014-08-02',
+          end: '2014-08-05',
+          className: 'event2'
+        }
+      ]
+    })
+    let dayGridWrapper = new DayGridViewWrapper(calendar).dayGrid
+
+    var row0 = dayGridWrapper.getRowEl(0)
+    var row0event1 = row0.querySelector('.event1')
+    var row0event2 = row0.querySelector('.event2')
+    var row1 = dayGridWrapper.getRowEl(1)
+    var row1event1 = row1.querySelector('.event1')
+    var row1event2 = row1.querySelector('.event2')
+
+    expect($(row0event1).offset().top).toBeLessThan($(row0event2).offset().top)
+    expect($(row1event1).offset().top).toBeLessThan($(row1event2).offset().top)
   })
 
   it('renders an event with no url with no <a> href', function() {
-    var options = {}
-    options.events = [ {
-      title: 'event1',
-      start: '2014-08-01'
-    } ]
-    initCalendar(options)
-    var seg = getSingleEl()
-    expect(seg).not.toHaveAttr('href')
+    let calendar = initCalendar({
+      events: [ {
+        title: 'event1',
+        start: '2014-08-01'
+      } ]
+    })
+    let eventEl = new CalendarWrapper(calendar).getFirstEventEl()
+    expect(eventEl).not.toHaveAttr('href')
   })
 
   it('renders an event with a url with an <a> href', function() {
-    var options = {}
-    options.events = [ {
-      title: 'event1',
-      start: '2014-08-01',
-      url: 'http://google.com/'
-    } ]
-    initCalendar(options)
-    var seg = getSingleEl()
-    expect(seg).toHaveAttr('href')
+    let calendar = initCalendar({
+      events: [ {
+        title: 'event1',
+        start: '2014-08-01',
+        url: 'http://google.com/'
+      } ]
+    })
+    let eventEl = new CalendarWrapper(calendar).getFirstEventEl()
+    expect(eventEl).toHaveAttr('href')
   })
 
 })

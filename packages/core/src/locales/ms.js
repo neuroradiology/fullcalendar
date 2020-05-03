@@ -14,10 +14,10 @@ export default {
     day: "Hari",
     list: "Agenda"
   },
-  weekLabel: "Mg",
+  weekText: "Mg",
   allDayText: "Sepanjang hari",
-  eventLimitText: function(n) {
+  moreLinkText: function(n) {
     return "masih ada " + n + " acara";
   },
-  noEventsMessage: "Tiada peristiwa untuk dipaparkan"
+  noEventsText: "Tiada peristiwa untuk dipaparkan"
 };

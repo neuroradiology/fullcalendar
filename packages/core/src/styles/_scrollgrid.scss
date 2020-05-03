@@ -1,0 +1,100 @@
+
+.fc-scrollgrid {
+
+  // root AND inner tables
+  &, table {
+    width: 100%; // because tables don't normally do this
+    table-layout: fixed;
+    border-collapse: separate !important; // much better for sticky chunks. OVERCOME reset
+  }
+
+  // inner tables
+  table {
+    border-style: hidden !important; // kill outer border if theme styled it. chunks handle it
+  }
+
+  // all cells
+  tr > * {
+    padding: 0;
+  }
+
+}
+.fc-scrollgrid-liquid {
+  height: 100%;
+}
+.fc-theme-standard .fc-scrollgrid {
+  border: 1px solid #ddd; // okay because bootstrap does this too
+}
+.fc-media-print .fc-scrollgrid {
+  table-layout: auto;
+}
+
+
+// dedup top/bottom borders
+// rows own their top border for the most part
+.fc-scrollgrid tr:not(.fc-scrollgrid-section-header) > * { // but header still owns its bottom border
+  border-bottom: 0;
+}
+.fc-scrollgrid tr:first-child > *,
+.fc-scrollgrid-section-header + .fc-scrollgrid-section > *, // the section right after the header
+.fc .fc-scrollgrid-section-footer > * { // the foot, because it's usually just scrollbars
+  border-top: 0;
+}
+
+
+// dedup left/right borders
+// rows own their left border (right border in rtl)
+.fc-direction-ltr .fc-scrollgrid tr > * {
+  &:first-child { border-left: 0 }
+  & { border-right: 0 }
+}
+.fc-direction-rtl .fc-scrollgrid tr > * {
+  &:first-child { border-right: 0 }
+  & { border-left: 0 }
+}
+
+
+.fc-scrollgrid-section { // a <tr>
+  height: 0;
+
+  > td {
+    height: 0; // needs a height so inner div within grow
+  }
+
+  table {
+    height: 1px;
+      // for most browsers, if a height isn't set on the table, can't do liquid-height within cells
+      // serves as a min-height. harmless
+  }
+}
+
+.fc-scrollgrid-section-liquid {
+  height: auto;
+
+  > td {
+    height: 100%; // FF needs this instead of auto
+  }
+}
+
+
+// stickiness
+
+.fc-scrollgrid-section-header > td {
+  top: 0; // for when sticky
+}
+
+.fc-scrollgrid-section-footer > td {
+  bottom: 0; // for when sticky
+}
+
+.fc-scrollgrid-section-sticky > td {
+  background: #fff; // TODO: var
+  position: sticky; // TODO: browser prefixes?
+  z-index: 2; // TODO: var
+  // TODO: box-shadow when sticking
+}
+
+.fc-scrollgrid-sticky-shim { // for horizontal scrollbar
+  height: 1px; // needs height to create scrollbars
+  margin-bottom: -1px;
+}

@@ -1,38 +1,45 @@
-import BootstrapPlugin from '@fullcalendar/bootstrap'
-import DayGridPlugin from '@fullcalendar/daygrid'
+import bootstrapPlugin from '@fullcalendar/bootstrap'
+import dayGridPlugin from '@fullcalendar/daygrid'
+import { CalendarWrapper } from '../lib/wrappers/CalendarWrapper'
 
 describe('bootstrap theme', function() {
   pushOptions({
-    plugins: [ BootstrapPlugin, DayGridPlugin ],
+    plugins: [ bootstrapPlugin, dayGridPlugin ],
     themeSystem: 'bootstrap'
   })
 
   describe('fa', function() {
     pushOptions({
-      header: { left: '', center: '', right: 'next' }
+      headerToolbar: { left: '', center: '', right: 'next' }
     })
 
     it('renders default', function() {
-      initCalendar()
-      expect($('.fa')).toHaveClass('fa-chevron-right')
+      let calendar = initCalendar()
+      let toolbarWrapper = new CalendarWrapper(calendar).toolbar
+      let buttonInfo = toolbarWrapper.getButtonInfo('next', 'fa')
+
+      expect(buttonInfo.iconName).toBe('chevron-right')
     })
 
     it('renders a customized icon', function() {
-      initCalendar({
+      let calendar = initCalendar({
         bootstrapFontAwesome: {
           next: 'asdf'
         }
       })
-      expect($('.fa')).toHaveClass('fa-asdf')
+      let toolbarWrapper = new CalendarWrapper(calendar).toolbar
+      let buttonInfo = toolbarWrapper.getButtonInfo('next', 'fa')
+
+      expect(buttonInfo.iconName).toBe('asdf')
     })
 
     it('renders text when specified as false', function() {
-      initCalendar({
+      let calendar = initCalendar({
         bootstrapFontAwesome: false
       })
-      expect($('.fa')).not.toBeInDOM()
-      expect($('.fc-next-button')).toHaveText('next')
+      let toolbarWrapper = new CalendarWrapper(calendar).toolbar
+
+      expect(toolbarWrapper.getButtonInfo('next', 'fa').iconName).toBeFalsy()
     })
   })
-
 })

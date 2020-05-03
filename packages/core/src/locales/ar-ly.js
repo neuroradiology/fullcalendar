@@ -5,7 +5,7 @@ export default {
     dow: 6, // Saturday is the first day of the week.
     doy: 12  // The week that contains Jan 1st is the first week of the year.
   },
-  dir: 'rtl',
+  direction: 'rtl',
   buttonText: {
     prev: "السابق",
     next: "التالي",
@@ -15,8 +15,8 @@ export default {
     day: "يوم",
     list: "أجندة"
   },
-  weekLabel: "أسبوع",
+  weekText: "أسبوع",
   allDayText: "اليوم كله",
-  eventLimitText: "أخرى",
-  noEventsMessage: "أي أحداث لعرض"
+  moreLinkText: "أخرى",
+  noEventsText: "أي أحداث لعرض"
 };

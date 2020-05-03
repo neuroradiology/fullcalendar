@@ -5,7 +5,7 @@ export default {
     dow: 6, // Saturday is the first day of the week.
     doy: 12 // The week that contains Jan 1st is the first week of the year.
   },
-  dir: 'rtl',
+  direction: 'rtl',
   buttonText: {
     prev: "قبلی",
     next: "بعدی",
@@ -15,10 +15,10 @@ export default {
     day: "روز",
     list: "برنامه"
   },
-  weekLabel: "هف",
+  weekText: "هف",
   allDayText: "تمام روز",
-  eventLimitText: function(n) {
+  moreLinkText: function(n) {
     return "بیش از " + n;
   },
-  noEventsMessage: "هیچ رویدادی به نمایش"
+  noEventsText: "هیچ رویدادی به نمایش"
 };

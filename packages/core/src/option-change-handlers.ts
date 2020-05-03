@@ -1,27 +1,29 @@
 import { createPlugin } from './plugin-system'
-import { Calendar } from './main'
 import { hashValuesToArray } from './util/object'
 import { EventSource } from './structs/event-source'
+import { ReducerContext } from './reducers/ReducerContext'
 
-export default createPlugin({
+export const changeHandlerPlugin = createPlugin({
   optionChangeHandlers: {
-    events(events, calendar, deepEqual) {
-      handleEventSources([ events ], calendar, deepEqual)
+    events(events, context) {
+      handleEventSources([ events ], context)
     },
-    eventSources: handleEventSources,
-    plugins: handlePlugins
+    eventSources: handleEventSources
   }
 })
 
-function handleEventSources(inputs, calendar: Calendar, deepEqual) {
-  let unfoundSources: EventSource[] = hashValuesToArray(calendar.state.eventSources)
+/*
+BUG: if `event` was supplied, all previously-given `eventSources` will be wiped out
+*/
+function handleEventSources(inputs, context: ReducerContext) {
+  let unfoundSources: EventSource[] = hashValuesToArray(context.getCurrentState().eventSources)
   let newInputs = []
 
   for (let input of inputs) {
     let inputFound = false
 
     for (let i = 0; i < unfoundSources.length; i++) {
-      if (deepEqual(unfoundSources[i]._raw, input)) {
+      if (unfoundSources[i]._raw === input) {
         unfoundSources.splice(i, 1) // delete
         inputFound = true
         break
@@ -34,18 +36,13 @@ function handleEventSources(inputs, calendar: Calendar, deepEqual) {
   }
 
   for (let unfoundSource of unfoundSources) {
-    calendar.dispatch({
+    context.dispatch({
       type: 'REMOVE_EVENT_SOURCE',
       sourceId: unfoundSource.sourceId
     })
   }
 
   for (let newInput of newInputs) {
-    calendar.addEventSource(newInput)
+    context.calendarApi.addEventSource(newInput)
   }
-}
-
-// shortcoming: won't remove plugins
-function handlePlugins(inputs, calendar: Calendar) {
-  calendar.addPluginInputs(inputs) // will gracefully handle duplicates
 }

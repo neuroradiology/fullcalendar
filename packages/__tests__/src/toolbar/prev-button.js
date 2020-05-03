@@ -6,18 +6,17 @@ SEE ALSO:
 - other range intersection tests handled by next-button
 */
 
-import { expectButtonEnabled } from './ToolbarUtils'
+import { CalendarWrapper } from '../lib/wrappers/CalendarWrapper'
 
 describe('prev button', function() {
   pushOptions({
-    defaultView: 'timeGridWeek',
-    defaultDate: '2017-06-08'
+    initialView: 'timeGridWeek',
+    initialDate: '2017-06-08'
   })
 
   describe('when there is no specified validRange', function() {
     it('is enabled', function() {
-      initCalendar()
-      expectButtonEnabled('prev', true)
+      expectEnabled(initCalendar(), true)
     })
   })
 
@@ -27,47 +26,49 @@ describe('prev button', function() {
       dateIncrement: { years: 1 } // prev range is 2016-06-05 - 2016-06-12
     })
     it('is disabled', function() {
-      initCalendar()
-      expectButtonEnabled('prev', false)
+      expectEnabled(initCalendar(), false)
     })
   })
 
   describe('when month view', function() {
     pushOptions({
-      defaultView: 'dayGridMonth',
-      defaultDate: '2017-03-01',
+      initialView: 'dayGridMonth',
+      initialDate: '2017-03-01',
       validRange: { start: '2017-02-07' },
       dateIncrement: { years: 1 } // prev range is 2016-06-05 - 2016-06-12
     })
 
     it('when prev date range is partially before validRange', function() {
-      initCalendar()
-      expectButtonEnabled('prev', false)
+      expectEnabled(initCalendar(), false)
     })
   })
 
   describe('when day before current day is a hidden day', function() {
     pushOptions({
-      defaultDate: '2017-03-27',
-      defaultView: 'dayGridDay',
+      initialDate: '2017-03-27',
+      initialView: 'dayGridDay',
       weekends: false,
       dateIncrement: { years: 1 } // prev range is 2016-06-05 - 2016-06-12
     })
     it('is enabled', function() {
-      initCalendar()
-      expectButtonEnabled('prev', true)
+      expectEnabled(initCalendar(), true)
     })
   })
 
-  describe('when defaultDate is constrained backward to validRange and prev week is valid', function() {
+  describe('when initialDate is constrained backward to validRange and prev week is valid', function() {
     pushOptions({
-      defaultDate: '2017-07-17',
-      defaultView: 'timeGridWeek',
+      initialDate: '2017-07-17',
+      initialView: 'timeGridWeek',
       validRange: { start: '2017-03-20', end: '2017-03-30' }
     })
     it('is enabled', function() {
-      initCalendar()
-      expectButtonEnabled('prev', true)
+      expectEnabled(initCalendar(), true)
     })
   })
+
+  function expectEnabled(calendar, bool) {
+    let toolbarWrapper = new CalendarWrapper(calendar).toolbar
+    expect(toolbarWrapper.getButtonEnabled('prev')).toBe(bool)
+  }
+
 })

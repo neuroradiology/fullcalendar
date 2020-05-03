@@ -1,10 +1,10 @@
-import { getEventEls } from '../event-render/EventRenderUtils'
+import { CalendarWrapper } from '../lib/wrappers/CalendarWrapper'
 
 describe('defaultAllDayEventDuration', function() {
 
   pushOptions({
-    defaultDate: '2014-05-01',
-    defaultView: 'dayGridMonth',
+    initialDate: '2014-05-01',
+    initialView: 'dayGridMonth',
     timeZone: 'UTC'
   })
 
@@ -53,12 +53,13 @@ describe('defaultAllDayEventDuration', function() {
       forceEventDuration: false
     })
 
-    describeOptions('defaultView', {
+    describeOptions('initialView', {
       'with dayGridWeek view': 'dayGridWeek',
       'with week view': 'timeGridWeek'
     }, function() {
-      it('renders an all-day event with no `end` to appear to have the default duration', function(done) {
-        initCalendar({
+
+      it('renders an all-day event with no `end` to appear to have the default duration', function() {
+        let calendar = initCalendar({
           defaultAllDayEventDuration: { days: 2 },
           events: [
             {
@@ -74,16 +75,16 @@ describe('defaultAllDayEventDuration', function() {
               allDay: true,
               start: '2014-04-28'
             }
-          ],
-          _eventsPositioned: function() {
-            var eventElms = getEventEls()
-            var width0 = eventElms.eq(0).outerWidth()
-            var width1 = eventElms.eq(1).outerWidth()
-            expect(width0).toBeGreaterThan(0)
-            expect(width0).toEqual(width1)
-            done()
-          }
+          ]
         })
+
+        let calendarWrapper = new CalendarWrapper(calendar)
+        var eventElms = calendarWrapper.getEventEls()
+
+        var width0 = eventElms[0].offsetWidth
+        var width1 = eventElms[1].offsetWidth
+        expect(width0).toBeGreaterThan(0)
+        expect(width0).toEqual(width1)
       })
     })
   })

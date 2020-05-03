@@ -1,7 +1,7 @@
 
 export default {
   code: "he",
-  dir: 'rtl',
+  direction: 'rtl',
   buttonText: {
     prev: "הקודם",
     next: "הבא",
@@ -12,7 +12,7 @@ export default {
     list: "סדר יום"
   },
   allDayText: "כל היום",
-  eventLimitText: "אחר",
-  noEventsMessage: "אין אירועים להצגה",
-  weekLabel: "שבוע"
+  moreLinkText: "אחר",
+  noEventsText: "אין אירועים להצגה",
+  weekText: "שבוע"
 };

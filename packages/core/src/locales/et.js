@@ -14,10 +14,10 @@ export default {
     day: "Päev",
     list: "Päevakord"
   },
-  weekLabel: "näd",
+  weekText: "näd",
   allDayText: "Kogu päev",
-  eventLimitText: function(n) {
+  moreLinkText: function(n) {
     return "+ veel " + n;
   },
-  noEventsMessage: "Kuvamiseks puuduvad sündmused"
+  noEventsText: "Kuvamiseks puuduvad sündmused"
 };

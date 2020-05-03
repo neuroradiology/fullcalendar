@@ -1,17 +1,18 @@
 import {
   compareNumbers, enableCursor, disableCursor, DateComponent, Hit,
   DateSpan, PointerDragEvent, dateSelectionJoinTransformer,
-  Interaction, InteractionSettings, interactionSettingsToStore
+  Interaction, InteractionSettings, interactionSettingsToStore,
+  triggerDateSelect
 } from '@fullcalendar/core'
-import HitDragging from './HitDragging'
-import FeaturefulElementDragging from '../dnd/FeaturefulElementDragging'
+import { HitDragging } from './HitDragging'
+import { FeaturefulElementDragging } from '../dnd/FeaturefulElementDragging'
 import { __assign } from 'tslib'
 
 /*
 Tracks when the user selects a portion of time of a component,
 constituted by a drag over date cells, with a possible delay at the beginning of the drag.
 */
-export default class DateSelecting extends Interaction {
+export class DateSelecting extends Interaction {
 
   dragging: FeaturefulElementDragging
   hitDragging: HitDragging
@@ -22,7 +23,7 @@ export default class DateSelecting extends Interaction {
     let { component } = settings
     let { options } = component.context
 
-    let dragging = this.dragging = new FeaturefulElementDragging(component.el)
+    let dragging = this.dragging = new FeaturefulElementDragging(settings.el)
     dragging.touchScrollAllowed = false
     dragging.minDistance = options.selectMinDistance || 0
     dragging.autoScroller.isEnabled = options.dragScroll
@@ -53,11 +54,11 @@ export default class DateSelecting extends Interaction {
   }
 
   handleDragStart = (ev: PointerDragEvent) => {
-    this.component.context.calendar.unselect(ev) // unselect previous selections
+    this.component.context.calendarApi.unselect(ev) // unselect previous selections
   }
 
   handleHitUpdate = (hit: Hit | null, isFinal: boolean) => {
-    let { calendar } = this.component.context
+    let { context } = this.component
     let dragSelection: DateSpan | null = null
     let isInvalid = false
 
@@ -65,7 +66,7 @@ export default class DateSelecting extends Interaction {
       dragSelection = joinHitsIntoSelection(
         this.hitDragging.initialHit!,
         hit,
-        calendar.pluginSystem.hooks.dateSelectionTransformers
+        context.pluginHooks.dateSelectionTransformers
       )
 
       if (!dragSelection || !this.component.isDateSelectionValid(dragSelection)) {
@@ -75,9 +76,9 @@ export default class DateSelecting extends Interaction {
     }
 
     if (dragSelection) {
-      calendar.dispatch({ type: 'SELECT_DATES', selection: dragSelection })
+      context.dispatch({ type: 'SELECT_DATES', selection: dragSelection })
     } else if (!isFinal) { // only unselect if moved away while dragging
-      calendar.dispatch({ type: 'UNSELECT_DATES' })
+      context.dispatch({ type: 'UNSELECT_DATES' })
     }
 
     if (!isInvalid) {
@@ -95,7 +96,7 @@ export default class DateSelecting extends Interaction {
     if (this.dragSelection) {
 
       // selection is already rendered, so just need to report selection
-      this.component.context.calendar.triggerDateSelect(this.dragSelection, pev)
+      triggerDateSelect(this.dragSelection, pev, this.component.context)
 
       this.dragSelection = null
     }

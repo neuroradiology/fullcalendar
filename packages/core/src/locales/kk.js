@@ -14,10 +14,10 @@ export default {
     day: "Күн",
     list: "Күн тәртібі"
   },
-  weekLabel: "Не",
+  weekText: "Не",
   allDayText: "Күні бойы",
-  eventLimitText: function(n) {
+  moreLinkText: function(n) {
     return "+ тағы " + n;
   },
-  noEventsMessage: "Көрсету үшін оқиғалар жоқ"
+  noEventsText: "Көрсету үшін оқиғалар жоқ"
 };

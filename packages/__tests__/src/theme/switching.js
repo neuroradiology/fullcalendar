@@ -1,34 +1,34 @@
-import BootstrapPlugin from '@fullcalendar/bootstrap'
-import DayGridPlugin from '@fullcalendar/daygrid'
+import bootstrapPlugin from '@fullcalendar/bootstrap'
+import dayGridPlugin from '@fullcalendar/daygrid'
+import { CalendarWrapper } from '../lib/wrappers/CalendarWrapper'
 
 describe('theme switching', function() {
   pushOptions({
-    plugins: [ BootstrapPlugin, DayGridPlugin ]
+    plugins: [ bootstrapPlugin, dayGridPlugin ]
   })
 
   it('can switch from standard to bootstrap', function() {
-    initCalendar()
-    verifyStandardTheme()
+    let calendar = initCalendar()
+    verifyStandardTheme(calendar)
     currentCalendar.setOption('themeSystem', 'bootstrap')
-    verifyBootstrapTheme()
+    verifyBootstrapTheme(calendar)
   })
 
   it('can switch from bootstrap to standard', function() {
-    initCalendar({ themeSystem: 'bootstrap' })
-    verifyBootstrapTheme()
+    let calendar = initCalendar({ themeSystem: 'bootstrap' })
+    verifyBootstrapTheme(calendar)
     currentCalendar.setOption('themeSystem', 'standard')
-    verifyStandardTheme()
+    verifyStandardTheme(calendar)
   })
 
 
-  function verifyStandardTheme() {
-    expect($('.fc-unthemed')).toBeInDOM()
-    expect($('.fc-widget-header')).toBeInDOM()
+  function verifyStandardTheme(calendar) {
+    expect(calendar.el).toHaveClass(CalendarWrapper.UNTHEMED_CLASSNAME)
   }
 
-  function verifyBootstrapTheme() {
-    expect($('.fc-bootstrap')).toBeInDOM()
-    expect($('.fc .table-bordered')).toBeInDOM()
+
+  function verifyBootstrapTheme(calendar) {
+    expect(calendar.el).toHaveClass(CalendarWrapper.BOOTSTRAP_CLASSNAME)
   }
 
 })

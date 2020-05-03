@@ -14,10 +14,10 @@ export default {
     day: "Den",
     list: "Agenda"
   },
-  weekLabel: "Týd",
+  weekText: "Týd",
   allDayText: "Celý den",
-  eventLimitText: function(n) {
+  moreLinkText: function(n) {
     return "+další: " + n;
   },
-  noEventsMessage: "Žádné akce k zobrazení"
+  noEventsText: "Žádné akce k zobrazení"
 };

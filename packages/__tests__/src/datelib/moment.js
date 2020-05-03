@@ -1,13 +1,13 @@
 import { Calendar } from '@fullcalendar/core'
-import MomentPlugin, { toMoment, toDuration } from '@fullcalendar/moment'
-import DayGridPlugin from '@fullcalendar/daygrid'
-import { getSingleEl, getEventElTimeText } from '../event-render/EventRenderUtils'
+import momentPlugin, { toMoment, toMomentDuration } from '@fullcalendar/moment'
+import dayGridPlugin from '@fullcalendar/daygrid'
 import 'moment/locale/es' // only test spanish
+import { CalendarWrapper } from '../lib/wrappers/CalendarWrapper'
 
 
 describe('moment plugin', function() {
 
-  const PLUGINS = [ DayGridPlugin, MomentPlugin ]
+  const PLUGINS = [ dayGridPlugin, momentPlugin ]
   pushOptions({ plugins: PLUGINS })
 
   describe('toMoment', function() {
@@ -16,7 +16,7 @@ describe('moment plugin', function() {
 
       it('transfers UTC', function() {
         let calendar = new Calendar(document.createElement('div'), {
-          plugins: [ DayGridPlugin ],
+          plugins: [ dayGridPlugin ],
           events: [ { start: '2018-09-05T12:00:00', end: '2018-09-05T18:00:00' } ],
           timeZone: 'UTC'
         })
@@ -29,7 +29,7 @@ describe('moment plugin', function() {
 
       it('transfers local', function() {
         let calendar = new Calendar(document.createElement('div'), {
-          plugins: [ DayGridPlugin ],
+          plugins: [ dayGridPlugin ],
           events: [ { start: '2018-09-05T12:00:00', end: '2018-09-05T18:00:00' } ],
           timeZone: 'local'
         })
@@ -44,7 +44,7 @@ describe('moment plugin', function() {
 
     it('transfers locale', function() {
       let calendar = new Calendar(document.createElement('div'), {
-        plugins: [ DayGridPlugin ],
+        plugins: [ dayGridPlugin ],
         events: [ { start: '2018-09-05T12:00:00', end: '2018-09-05T18:00:00' } ],
         locale: 'es'
       })
@@ -59,14 +59,14 @@ describe('moment plugin', function() {
 
     it('converts correctly', function() {
       let calendar = new Calendar(document.createElement('div'), {
-        plugins: [ DayGridPlugin ],
+        plugins: [ dayGridPlugin ],
         defaultTimedEventDuration: '05:00',
         defaultAllDayEventDuration: { days: 3 }
       })
 
       // hacky way to have a duration parsed
-      let timedDuration = toDuration(calendar.defaultTimedEventDuration)
-      let allDayDuration = toDuration(calendar.defaultAllDayEventDuration)
+      let timedDuration = toMomentDuration(calendar.currentState.computedOptions.defaultTimedEventDuration)
+      let allDayDuration = toMomentDuration(calendar.currentState.computedOptions.defaultAllDayEventDuration)
 
       expect(timedDuration.asHours()).toBe(5)
       expect(allDayDuration.asDays()).toBe(3)
@@ -77,8 +77,8 @@ describe('moment plugin', function() {
   describe('date formatting', function() {
 
     it('produces event time text', function() {
-      initCalendar({
-        defaultView: 'dayGridMonth',
+      let calendar = initCalendar({
+        initialView: 'dayGridMonth',
         now: '2018-09-06',
         displayEventEnd: false,
         eventTimeFormat: 'HH:mm:ss[!]',
@@ -86,7 +86,12 @@ describe('moment plugin', function() {
           { title: 'my event', start: '2018-09-06T13:30:20' }
         ]
       })
-      expect(getEventElTimeText(getSingleEl())).toBe('13:30:20!')
+
+      let calendarWrapper = new CalendarWrapper(calendar)
+      let eventEl = calendarWrapper.getFirstEventEl()
+      let eventInfo = calendarWrapper.getEventElInfo(eventEl)
+
+      expect(eventInfo.timeText).toBe('13:30:20!')
     })
 
   })
@@ -153,7 +158,7 @@ describe('moment plugin', function() {
 
     it('produces title with titleRangeSeparator', function() {
       initCalendar({ // need to render the calendar to get view.title :(
-        defaultView: 'dayGridWeek',
+        initialView: 'dayGridWeek',
         now: '2018-09-06',
         titleFormat: 'MMMM {D} YY [yup]',
         titleRangeSeparator: ' to '

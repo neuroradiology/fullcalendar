@@ -10,10 +10,10 @@ export default {
     day: "Ден",
     list: "График"
   },
-  weekLabel: "Сед",
+  weekText: "Сед",
   allDayText: "Цел ден",
-  eventLimitText: function(n) {
+  moreLinkText: function(n) {
     return "+повеќе " + n;
   },
-  noEventsMessage: "Нема настани за прикажување"
+  noEventsText: "Нема настани за прикажување"
 };

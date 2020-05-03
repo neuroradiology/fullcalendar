@@ -1,13 +1,13 @@
-import { getSingleEl, getSingleBackgroundEventEl } from '../event-render/EventRenderUtils'
+import { CalendarWrapper } from '../lib/wrappers/CalendarWrapper'
 
 describe('eventClick', function() {
   pushOptions({
-    defaultDate: '2018-08-31',
-    defaultView: 'dayGridMonth'
+    initialDate: '2018-08-31',
+    initialView: 'dayGridMonth'
   })
 
   it('receives correct args', function(done) {
-    initCalendar({
+    let calendar = initCalendar({
       events: [
         { start: '2018-08-31' }
       ],
@@ -21,27 +21,31 @@ describe('eventClick', function() {
       }
     })
 
-    // single EVENT element
-    getSingleEl().simulate('click')
+    let eventEls = new CalendarWrapper(calendar).getEventEls()
+
+    expect(eventEls.length).toBe(1)
+    $(eventEls[0]).simulate('click')
   })
 
   it('fires on a background event', function(done) {
-    initCalendar({
+    let calendar = initCalendar({
       events: [
-        { start: '2018-08-31', rendering: 'background' }
+        { start: '2018-08-31', display: 'background' }
       ],
       eventClick(arg) {
-        expect(arg.event.rendering).toBe('background')
+        expect(arg.event.display).toBe('background')
         done()
       }
     })
 
-    // single EVENT element
-    getSingleBackgroundEventEl().simulate('click')
+    let bgEventEls = new CalendarWrapper(calendar).getBgEventEls()
+
+    expect(bgEventEls.length).toBe(1)
+    $(bgEventEls[0]).simulate('click')
   })
 
   it('works via touch', function(done) {
-    initCalendar({
+    let calendar = initCalendar({
       events: [
         { start: '2018-08-31' }
       ],
@@ -50,7 +54,10 @@ describe('eventClick', function() {
       }
     })
 
-    getSingleEl().simulate('click')
+    let eventEls = new CalendarWrapper(calendar).getEventEls()
+
+    expect(eventEls.length).toBe(1)
+    $(eventEls[0]).simulate('click')
   })
 
 })

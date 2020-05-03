@@ -1,8 +1,9 @@
-import { getHeaderEl } from '../view-render/DayGridRenderUtils'
-import { DAY_CLASSES } from '../lib/constants'
 import { removeLtrCharCodes } from '../lib/string'
 import { addDays } from '@fullcalendar/core'
 import { parseUtcDate } from '../lib/date-parsing'
+import { DayGridViewWrapper } from '../lib/wrappers/DayGridViewWrapper'
+import { CalendarWrapper } from '../lib/wrappers/CalendarWrapper'
+
 
 describe('day names', function() {
   var sundayDate = parseUtcDate('2019-03-17')
@@ -14,43 +15,46 @@ describe('day names', function() {
 
   describe('when view is dayGridDay', function() {
     pushOptions({
-      defaultView: 'dayGridDay'
+      initialView: 'dayGridDay'
     })
+
     describe('when locale is default', function() {
       pushOptions({
         locale: 'en'
       })
-      DAY_CLASSES.forEach(function(cls, index) {
+
+      CalendarWrapper.DOW_CLASSNAMES.forEach(function(dowClassName, index) {
         var dayDate = addDays(sundayDate, index)
         var dayText = removeLtrCharCodes(
           dayDate.toLocaleString('en', { weekday: 'long', timeZone: 'UTC' })
         )
 
         it('should be ' + dayText, function() {
-          initCalendar({
+          let calendar = initCalendar({
             now: dayDate
           })
-          expect(getHeaderEl().find(`.${cls}`)).toHaveText(dayText)
+          let headerWrapper = new DayGridViewWrapper(calendar).header
+          expect(headerWrapper.el.querySelector(`.${dowClassName}`)).toHaveText(dayText)
         })
       })
     })
 
     $.each(locales, function(index, locale) {
       describe('when locale is ' + locale, function() {
-        DAY_CLASSES.forEach(function(cls, index, classes) {
+
+        CalendarWrapper.DOW_CLASSNAMES.forEach(function(dowClassName, index) {
           var dayDate = addDays(sundayDate, index)
           var dayText = removeLtrCharCodes(
             dayDate.toLocaleString(locale, { weekday: 'long', timeZone: 'UTC' })
           )
 
           it('should be the translation for ' + dayText, function() {
-
-            initCalendar({
+            let calendar = initCalendar({
               locale: locale,
               now: dayDate
             })
-
-            expect(getHeaderEl().find(`.${cls}`)).toHaveText(dayText)
+            let headerWrapper = new DayGridViewWrapper(calendar).header
+            expect(headerWrapper.el.querySelector(`.${dowClassName}`)).toHaveText(dayText)
           })
         })
       })

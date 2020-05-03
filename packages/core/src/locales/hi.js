@@ -14,10 +14,10 @@ export default {
     day: "दिन",
     list: "कार्यसूची"
   },
-  weekLabel: "हफ्ता",
+  weekText: "हफ्ता",
   allDayText: "सभी दिन",
-  eventLimitText: function(n) {
+  moreLinkText: function(n) {
     return "+अधिक " + n;
   },
-  noEventsMessage: "कोई घटनाओं को प्रदर्शित करने के लिए"
+  noEventsText: "कोई घटनाओं को प्रदर्शित करने के लिए"
 };

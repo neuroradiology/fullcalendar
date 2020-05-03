@@ -1,10 +1,12 @@
 import { Calendar } from '@fullcalendar/core'
-import InteractionPlugin from '@fullcalendar/interaction'
-import DayGridPlugin from '@fullcalendar/daygrid'
-import TimeGridPlugin from '@fullcalendar/timegrid'
-import { getSingleEl } from '../event-render/EventRenderUtils'
-import { getDayEl } from '../view-render/DayGridRenderUtils'
+import interactionPlugin from '@fullcalendar/interaction'
+import dayGridPlugin from '@fullcalendar/daygrid'
+import timeGridPlugin from '@fullcalendar/timegrid'
 import { getRectCenter } from '../lib/geom'
+import { DayGridViewWrapper } from '../lib/wrappers/DayGridViewWrapper'
+import { CalendarWrapper } from '../lib/wrappers/CalendarWrapper'
+import { TimeGridViewWrapper } from '../lib/wrappers/TimeGridViewWrapper'
+
 
 describe('dragging events between calendars', function() {
   let DEFAULT_DATE = '2019-01-01'
@@ -40,10 +42,10 @@ describe('dragging events between calendars', function() {
     let eventAllowCalled = false
 
     calendar0 = new Calendar(el0, {
-      plugins: [ InteractionPlugin, DayGridPlugin ],
+      plugins: [ interactionPlugin, dayGridPlugin ],
       timeZone: 'UTC',
-      defaultDate: DEFAULT_DATE,
-      defaultView: 'dayGridMonth',
+      initialDate: DEFAULT_DATE,
+      initialView: 'dayGridMonth',
       editable: true,
       events: [
         { start: '2019-01-01', id: 'a' }
@@ -56,10 +58,10 @@ describe('dragging events between calendars', function() {
     })
 
     calendar1 = new Calendar(el1, {
-      plugins: [ InteractionPlugin, DayGridPlugin ],
+      plugins: [ interactionPlugin, dayGridPlugin ],
       timeZone: 'UTC',
-      defaultDate: DEFAULT_DATE,
-      defaultView: 'dayGridMonth',
+      initialDate: DEFAULT_DATE,
+      initialView: 'dayGridMonth',
       editable: true,
       droppable: true,
       drop(info) {
@@ -83,13 +85,14 @@ describe('dragging events between calendars', function() {
     calendar0.render()
     calendar1.render()
 
-    let eventEl = getSingleEl()[0]
-    let dayEl = getDayEl('2019-01-05')[1] // the one from the SECOND calendar
-    let point0 = getRectCenter(eventEl.getBoundingClientRect())
+    let dayGridWrapper0 = new DayGridViewWrapper(calendar0).dayGrid
+    let dayGridWrapper1 = new DayGridViewWrapper(calendar1).dayGrid
+
+    let eventEl = dayGridWrapper0.getEventEls()[0]
+    let dayEl = dayGridWrapper1.getDayEls('2019-01-05')[0]
     let point1 = getRectCenter(dayEl.getBoundingClientRect())
 
     $(eventEl).simulate('drag', {
-      point: point0,
       end: point1,
       callback: function() {
         expect(triggerNames).toEqual([ 'eventLeave', 'drop', 'eventReceive' ])
@@ -102,11 +105,11 @@ describe('dragging events between calendars', function() {
   it('works between timeGrid views', function(done) {
 
     calendar0 = new Calendar(el0, {
-      plugins: [ InteractionPlugin, TimeGridPlugin ],
+      plugins: [ interactionPlugin, timeGridPlugin ],
       scrollTime: '00:00',
       timeZone: 'UTC',
-      defaultDate: DEFAULT_DATE,
-      defaultView: 'timeGridDay',
+      initialDate: DEFAULT_DATE,
+      initialView: 'timeGridDay',
       editable: true,
       events: [
         { start: '2019-01-01T00:00:00', id: 'a' }
@@ -114,11 +117,11 @@ describe('dragging events between calendars', function() {
     })
 
     calendar1 = new Calendar(el1, {
-      plugins: [ InteractionPlugin, TimeGridPlugin ],
+      plugins: [ interactionPlugin, timeGridPlugin ],
       scrollTime: '00:00',
       timeZone: 'UTC',
-      defaultDate: DEFAULT_DATE,
-      defaultView: 'timeGridDay',
+      initialDate: DEFAULT_DATE,
+      initialView: 'timeGridDay',
       editable: true,
       droppable: true,
       eventReceive: function(info) {
@@ -129,12 +132,11 @@ describe('dragging events between calendars', function() {
     calendar0.render()
     calendar1.render()
 
-    let eventEl = getSingleEl()[0]
-    let point0 = getRectCenter(eventEl.getBoundingClientRect())
-    let point1 = getRectCenter(el1.querySelector('.fc-time-grid-container').getBoundingClientRect())
+    let eventEl = new CalendarWrapper(calendar0).getEventEls()[0] // of the source calendar
+    let destViewWrapper = new TimeGridViewWrapper(calendar1)
+    let point1 = getRectCenter(destViewWrapper.getScrollerEl().getBoundingClientRect())
 
     $(eventEl).simulate('drag', {
-      point: point0,
       end: point1
     })
   })

@@ -1,58 +1,57 @@
-import { EventStore, expandRecurring, filterEventStoreDefs, parseEvents, createEmptyEventStore } from './structs/event-store'
-import Calendar from './Calendar'
-import { DateSpan, DateSpanApi } from './structs/date-span'
+import { EventStore, filterEventStoreDefs } from './structs/event-store'
+import { DateSpan } from './structs/date-span'
 import { rangeContainsRange, rangesIntersect, DateRange, OpenDateRange } from './datelib/date-range'
-import EventApi from './api/EventApi'
+import { EventApi } from './api/EventApi'
 import { compileEventUis } from './component/event-rendering'
 import { excludeInstances } from './reducers/eventStore'
-import { EventInput } from './structs/event'
 import { EventInteractionState } from './interactions/event-interaction-state'
 import { SplittableProps } from './component/event-splitting'
 import { mapHash } from './util/object'
-
-// TODO: rename to "criteria" ?
-export type ConstraintInput = 'businessHours' | string | EventInput | EventInput[]
-export type Constraint = 'businessHours' | string | EventStore | false // false means won't pass at all
-export type OverlapFunc = ((stillEvent: EventApi, movingEvent: EventApi | null) => boolean)
-export type AllowFunc = (span: DateSpanApi, movingEvent: EventApi | null) => boolean
-export type isPropsValidTester = (props: SplittableProps, calendar: Calendar) => boolean
+import { ReducerContext } from './reducers/ReducerContext'
+import { buildDateSpanApiWithContext } from './calendar-utils'
+import { Constraint } from './structs/constraint'
+import { expandRecurring } from './structs/recurring-event'
 
 
 // high-level segmenting-aware tester functions
 // ------------------------------------------------------------------------------------------------------------------------
 
-export function isInteractionValid(interaction: EventInteractionState, calendar: Calendar) {
-  return isNewPropsValid({ eventDrag: interaction }, calendar) // HACK: the eventDrag props is used for ALL interactions
+
+export function isInteractionValid(interaction: EventInteractionState, context: ReducerContext) {
+  return isNewPropsValid({ eventDrag: interaction }, context) // HACK: the eventDrag props is used for ALL interactions
 }
 
-export function isDateSelectionValid(dateSelection: DateSpan, calendar: Calendar) {
-  return isNewPropsValid({ dateSelection }, calendar)
+
+export function isDateSelectionValid(dateSelection: DateSpan, context: ReducerContext) {
+  return isNewPropsValid({ dateSelection }, context)
 }
 
-function isNewPropsValid(newProps, calendar: Calendar) {
-  let view = calendar.view
+
+function isNewPropsValid(newProps, context: ReducerContext) {
+  let calendarState = context.getCurrentState()
 
   let props = {
-    businessHours: view ? view.props.businessHours : createEmptyEventStore(), // why? yuck
+    businessHours: calendarState.businessHours,
     dateSelection: '',
-    eventStore: calendar.state.eventStore,
-    eventUiBases: calendar.eventUiBases,
+    eventStore: calendarState.eventStore,
+    eventUiBases: calendarState.eventUiBases,
     eventSelection: '',
     eventDrag: null,
     eventResize: null,
     ...newProps
   }
 
-  return (calendar.pluginSystem.hooks.isPropsValid || isPropsValid)(props, calendar)
+  return (context.pluginHooks.isPropsValid || isPropsValid)(props, context)
 }
 
-export function isPropsValid(state: SplittableProps, calendar: Calendar, dateSpanMeta = {}, filterConfig?): boolean {
 
-  if (state.eventDrag && !isInteractionPropsValid(state, calendar, dateSpanMeta, filterConfig)) {
+export function isPropsValid(state: SplittableProps, context: ReducerContext, dateSpanMeta = {}, filterConfig?): boolean {
+
+  if (state.eventDrag && !isInteractionPropsValid(state, context, dateSpanMeta, filterConfig)) {
     return false
   }
 
-  if (state.dateSelection && !isDateSelectionPropsValid(state, calendar, dateSpanMeta, filterConfig)) {
+  if (state.dateSelection && !isDateSelectionPropsValid(state, context, dateSpanMeta, filterConfig)) {
     return false
   }
 
@@ -63,7 +62,8 @@ export function isPropsValid(state: SplittableProps, calendar: Calendar, dateSpa
 // Moving Event Validation
 // ------------------------------------------------------------------------------------------------------------------------
 
-function isInteractionPropsValid(state: SplittableProps, calendar: Calendar, dateSpanMeta: any, filterConfig): boolean {
+function isInteractionPropsValid(state: SplittableProps, context: ReducerContext, dateSpanMeta: any, filterConfig): boolean {
+  let currentState = context.getCurrentState()
   let interaction = state.eventDrag // HACK: the eventDrag props is used for ALL interactions
 
   let subjectEventStore = interaction.mutatedEvents
@@ -73,7 +73,7 @@ function isInteractionPropsValid(state: SplittableProps, calendar: Calendar, dat
     subjectDefs,
     interaction.isEvent ?
       state.eventUiBases :
-      { '': calendar.selectionConfig } // if not a real event, validate as a selection
+      { '': currentState.selectionConfig } // if not a real event, validate as a selection
   )
 
   if (filterConfig) {
@@ -92,13 +92,13 @@ function isInteractionPropsValid(state: SplittableProps, calendar: Calendar, dat
     let subjectDef = subjectDefs[subjectInstance.defId]
 
     // constraint
-    if (!allConstraintsPass(subjectConfig.constraints, subjectRange, otherEventStore, state.businessHours, calendar)) {
+    if (!allConstraintsPass(subjectConfig.constraints, subjectRange, otherEventStore, state.businessHours, context)) {
       return false
     }
 
     // overlap
 
-    let overlapFunc = calendar.opt('eventOverlap')
+    let overlapFunc = context.options.eventOverlap
     if (typeof overlapFunc !== 'function') { overlapFunc = null }
 
     for (let otherInstanceId in otherInstances) {
@@ -118,8 +118,8 @@ function isInteractionPropsValid(state: SplittableProps, calendar: Calendar, dat
         }
 
         if (overlapFunc && !overlapFunc(
-          new EventApi(calendar, otherDefs[otherInstance.defId], otherInstance), // still event
-          new EventApi(calendar, subjectDef, subjectInstance) // moving event
+          new EventApi(context, otherDefs[otherInstance.defId], otherInstance), // still event
+          new EventApi(context, subjectDef, subjectInstance) // moving event
         )) {
           return false
         }
@@ -128,7 +128,7 @@ function isInteractionPropsValid(state: SplittableProps, calendar: Calendar, dat
 
     // allow (a function)
 
-    let calendarEventStore = calendar.state.eventStore // need global-to-calendar, not local to component (splittable)state
+    let calendarEventStore = currentState.eventStore // need global-to-calendar, not local to component (splittable)state
 
     for (let subjectAllow of subjectConfig.allows) {
 
@@ -143,13 +143,14 @@ function isInteractionPropsValid(state: SplittableProps, calendar: Calendar, dat
       let eventApi
 
       if (origDef) { // was previously in the calendar
-        eventApi = new EventApi(calendar, origDef, origInstance)
+        eventApi = new EventApi(context, origDef, origInstance)
+
       } else { // was an external event
-        eventApi = new EventApi(calendar, subjectDef) // no instance, because had no dates
+        eventApi = new EventApi(context, subjectDef) // no instance, because had no dates
       }
 
       if (!subjectAllow(
-        calendar.buildDateSpanApi(subjectDateSpan),
+        buildDateSpanApiWithContext(subjectDateSpan, context),
         eventApi
       )) {
         return false
@@ -165,27 +166,27 @@ function isInteractionPropsValid(state: SplittableProps, calendar: Calendar, dat
 // Date Selection Validation
 // ------------------------------------------------------------------------------------------------------------------------
 
-function isDateSelectionPropsValid(state: SplittableProps, calendar: Calendar, dateSpanMeta: any, filterConfig): boolean {
+function isDateSelectionPropsValid(state: SplittableProps, context: ReducerContext, dateSpanMeta: any, filterConfig): boolean {
   let relevantEventStore = state.eventStore
   let relevantDefs = relevantEventStore.defs
   let relevantInstances = relevantEventStore.instances
 
   let selection = state.dateSelection
   let selectionRange = selection.range
-  let { selectionConfig } = calendar
+  let { selectionConfig } = context.getCurrentState()
 
   if (filterConfig) {
     selectionConfig = filterConfig(selectionConfig)
   }
 
   // constraint
-  if (!allConstraintsPass(selectionConfig.constraints, selectionRange, relevantEventStore, state.businessHours, calendar)) {
+  if (!allConstraintsPass(selectionConfig.constraints, selectionRange, relevantEventStore, state.businessHours, context)) {
     return false
   }
 
   // overlap
 
-  let overlapFunc = calendar.opt('selectOverlap')
+  let overlapFunc = context.options.selectOverlap
   if (typeof overlapFunc !== 'function') { overlapFunc = null }
 
   for (let relevantInstanceId in relevantInstances) {
@@ -199,7 +200,7 @@ function isDateSelectionPropsValid(state: SplittableProps, calendar: Calendar, d
       }
 
       if (overlapFunc && !overlapFunc(
-        new EventApi(calendar, relevantDefs[relevantInstance.defId], relevantInstance)
+        new EventApi(context, relevantDefs[relevantInstance.defId], relevantInstance)
       )) {
         return false
       }
@@ -212,7 +213,7 @@ function isDateSelectionPropsValid(state: SplittableProps, calendar: Calendar, d
     let fullDateSpan = { ...dateSpanMeta, ...selection }
 
     if (!selectionAllow(
-      calendar.buildDateSpanApi(fullDateSpan),
+      buildDateSpanApiWithContext(fullDateSpan, context),
       null
     )) {
       return false
@@ -231,11 +232,11 @@ function allConstraintsPass(
   subjectRange: DateRange,
   otherEventStore: EventStore,
   businessHoursUnexpanded: EventStore,
-  calendar: Calendar
+  context: ReducerContext
 ): boolean {
   for (let constraint of constraints) {
     if (!anyRangesContainRange(
-      constraintToRanges(constraint, subjectRange, otherEventStore, businessHoursUnexpanded, calendar),
+      constraintToRanges(constraint, subjectRange, otherEventStore, businessHoursUnexpanded, context),
       subjectRange
     )) {
       return false
@@ -250,12 +251,12 @@ function constraintToRanges(
   subjectRange: DateRange, // for expanding a recurring constraint, or expanding business hours
   otherEventStore: EventStore, // for if constraint is an even group ID
   businessHoursUnexpanded: EventStore, // for if constraint is 'businessHours'
-  calendar: Calendar // for expanding businesshours
+  context: ReducerContext // for expanding businesshours
 ): OpenDateRange[] {
 
   if (constraint === 'businessHours') {
     return eventStoreToRanges(
-      expandRecurring(businessHoursUnexpanded, subjectRange, calendar)
+      expandRecurring(businessHoursUnexpanded, subjectRange, context)
     )
 
   } else if (typeof constraint === 'string') { // an group ID
@@ -267,7 +268,7 @@ function constraintToRanges(
 
   } else if (typeof constraint === 'object' && constraint) { // non-null object
     return eventStoreToRanges(
-      expandRecurring(constraint, subjectRange, calendar)
+      expandRecurring(constraint, subjectRange, context)
     )
   }
 
@@ -296,23 +297,4 @@ function anyRangesContainRange(outerRanges: DateRange[], innerRange: DateRange):
   }
 
   return false
-}
-
-
-// Parsing
-// ------------------------------------------------------------------------------------------------------------------------
-
-export function normalizeConstraint(input: ConstraintInput, calendar: Calendar): Constraint | null {
-  if (Array.isArray(input)) {
-    return parseEvents(input, '', calendar, true) // allowOpenRange=true
-
-  } else if (typeof input === 'object' && input) { // non-null object
-    return parseEvents([ input ], '', calendar, true) // allowOpenRange=true
-
-  } else if (input != null) {
-    return String(input)
-
-  } else {
-    return null
-  }
 }

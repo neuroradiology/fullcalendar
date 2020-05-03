@@ -3,20 +3,27 @@
     "target": "es5",
     "module": "es6",
     "moduleResolution": "node",
+    "esModuleInterop": true,
     "lib": [
       "dom",
       "es2015",
       "scripthost"
     ],
+    "incremental": true,
     "allowSyntheticDefaultImports": true,
     "noUnusedLocals": true,
     "noImplicitUseStrict": true,
     "importHelpers": true,
     "resolveJsonModule": true,
+    "declaration": true,
     "allowJs": true,
     "checkJs": true,
+    "jsx": "react",
+    "jsxFactory": "h",
     "baseUrl": ".",
+    "strictBindCallApply": true,
     "paths": {
+      "fullcalendar": [ "packages/bundle/src/main" ],
       "@fullcalendar/core": [ "packages/core/src/main" ],
       "@fullcalendar/core/*": [ "packages/core/src/*" ],
       "@fullcalendar/interaction": [ "packages/interaction/src/main" ],
@@ -29,21 +36,26 @@
       "@fullcalendar/moment-timezone": [ "packages/moment-timezone/src/main" ],
       "@fullcalendar/google-calendar": [ "packages/google-calendar/src/main" ],
       "@fullcalendar/bootstrap": [ "packages/bootstrap/src/main" ],
+      "fullcalendar-scheduler": [ "packages-premium/bundle/src/main" ],
+      "@fullcalendar/scrollgrid": [ "packages-premium/scrollgrid/src/main" ],
       "@fullcalendar/timeline": [ "packages-premium/timeline/src/main" ],
       "@fullcalendar/resource-common": [ "packages-premium/resource-common/src/main" ],
       "@fullcalendar/resource-timeline": [ "packages-premium/resource-timeline/src/main" ],
       "@fullcalendar/resource-daygrid": [ "packages-premium/resource-daygrid/src/main" ],
       "@fullcalendar/resource-timegrid": [ "packages-premium/resource-timegrid/src/main" ],
-      "package-tests/*": [ "packages/__tests__/src/*" ]
+      "standard-tests/*": [ "packages/__tests__/*" ],
+      "premium-tests/*": [ "packages-premium/__tests__/*" ]
     },
     "rootDir": ".",
     "outDir": "tmp/tsc-output"
   },
   "include": [
-    "packages/*/src/main.ts",
-    "packages/core/src/locales/*.js",
-    "packages/__tests__/src/**/*.js",
-    "packages-premium/*/src/main.ts",
-    "packages-premium/__tests__/src/**/*.js"
+    "packages*/*/src/**/*",
+    "packages*/__tests__/src/**/*",
+    "packages/core/src/locales/*"
+  ],
+  "exclude": [
+    "packages-contrib",
+    "node_modules"
   ]
 }

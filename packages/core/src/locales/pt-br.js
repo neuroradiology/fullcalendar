@@ -10,10 +10,10 @@ export default {
     day: "Dia",
     list: "Lista"
   },
-  weekLabel: "Sm",
+  weekText: "Sm",
   allDayText: "dia inteiro",
-  eventLimitText: function(n) {
+  moreLinkText: function(n) {
     return "mais +" + n;
   },
-  noEventsMessage: "Não há eventos para mostrar"
+  noEventsText: "Não há eventos para mostrar"
 };

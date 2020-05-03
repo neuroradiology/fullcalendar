@@ -8,10 +8,10 @@ import { CalendarSystem, createCalendarSystem } from './calendar-system'
 import { Locale } from './locale'
 import { NamedTimeZoneImpl, NamedTimeZoneImplClass } from './timezone'
 import { Duration, asRoughYears, asRoughMonths, asRoughDays, asRoughMs } from './duration'
-import { DateFormatter, buildIsoString } from './formatting'
+import { DateFormatter, CmdFormatterFunc } from './DateFormatter'
+import { buildIsoString } from './formatting-utils'
 import { parse } from './parsing'
 import { isInt } from '../util/misc'
-import { CmdFormatterFunc } from './formatting-cmd'
 
 export interface DateEnvSettings {
   timeZone: string
@@ -20,7 +20,7 @@ export interface DateEnvSettings {
   locale: Locale
   weekNumberCalculation?: any
   firstDay?: any,
-  weekLabel?: string,
+  weekText?: string,
   cmdFormatter?: CmdFormatterFunc
 }
 
@@ -44,7 +44,7 @@ export class DateEnv {
   weekDow: number // which day begins the week
   weekDoy: number // which day must be within the year, for computing the first week number
   weekNumberFunc: any
-  weekLabel: string // DON'T LIKE how options are confused with local
+  weekText: string // DON'T LIKE how options are confused with local
   cmdFormatter?: CmdFormatterFunc
 
 
@@ -76,7 +76,7 @@ export class DateEnv {
       this.weekNumberFunc = settings.weekNumberCalculation
     }
 
-    this.weekLabel = settings.weekLabel != null ? settings.weekLabel : settings.locale.options.weekLabel
+    this.weekText = settings.weekText != null ? settings.weekText : settings.locale.options.weekText
 
     this.cmdFormatter = settings.cmdFormatter
   }
@@ -112,12 +112,14 @@ export class DateEnv {
 
     if (typeof input === 'number') {
       marker = this.timestampToMarker(input)
+
     } else if (input instanceof Date) {
       input = input.valueOf()
 
       if (!isNaN(input)) {
         marker = this.timestampToMarker(input)
       }
+
     } else if (Array.isArray(input)) {
       marker = arrayToUtcDate(input)
     }
@@ -299,8 +301,8 @@ export class DateEnv {
     return (m1.valueOf() - m0.valueOf()) / asRoughMs(d)
   }
 
-
   // Start-Of
+  // these DON'T return zoned-dates. only UTC start-of dates
 
   startOf(m: DateMarker, unit: string) {
     if (unit === 'year') {
@@ -388,6 +390,10 @@ export class DateEnv {
     )
   }
 
+  /*
+  DUMB: the omitTime arg is dumb. if we omit the time, we want to omit the timezone offset. and if we do that,
+  might as well use buildIsoString or some other util directly
+  */
   formatIso(marker: DateMarker, extraOptions: any = {}) {
     let timeZoneOffset = null
 

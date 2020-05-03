@@ -1,114 +1,35 @@
+import { isArraysEqual } from './array'
 
-// Creating
-// ----------------------------------------------------------------------------------------------------------------
-
-const elementPropHash = { // when props given to createElement should be treated as props, not attributes
-  className: true,
-  colSpan: true,
-  rowSpan: true
-}
-
-const containerTagHash = {
-  '<tr': 'tbody',
-  '<td': 'tr'
-}
-
-export function createElement(tagName: string, attrs: object | null, content?: ElementContent): HTMLElement {
-  let el: HTMLElement = document.createElement(tagName)
-
-  if (attrs) {
-    for (let attrName in attrs) {
-      if (attrName === 'style') {
-        applyStyle(el, attrs[attrName])
-      } else if (elementPropHash[attrName]) {
-        el[attrName] = attrs[attrName]
-      } else {
-        el.setAttribute(attrName, attrs[attrName])
-      }
-    }
-  }
-
-  if (typeof content === 'string') {
-    el.innerHTML = content // shortcut. no need to process HTML in any way
-  } else if (content != null) {
-    appendToElement(el, content)
-  }
-
-  return el
-}
 
 export function htmlToElement(html: string): HTMLElement {
   html = html.trim()
-  let container = document.createElement(computeContainerTag(html))
+  let container = document.createElement('div')
   container.innerHTML = html
   return container.firstChild as HTMLElement
 }
 
-export function htmlToElements(html: string): HTMLElement[] {
-  return Array.prototype.slice.call(htmlToNodeList(html))
-}
 
-function htmlToNodeList(html: string): NodeList {
-  html = html.trim()
-  let container = document.createElement(computeContainerTag(html))
-  container.innerHTML = html
-  return container.childNodes
-}
-
-// assumes html already trimmed and tag names are lowercase
-function computeContainerTag(html: string) {
-  return containerTagHash[
-    html.substr(0, 3) // faster than using regex
-  ] || 'div'
-}
-
-
-// Inserting / Removing
-// ----------------------------------------------------------------------------------------------------------------
-
-export type ElementContent = string | Node | Node[] | NodeList
-
-export function appendToElement(el: HTMLElement, content: ElementContent) {
-  let childNodes = normalizeContent(content)
-
-  for (let i = 0; i < childNodes.length; i++) {
-    el.appendChild(childNodes[i])
-  }
-}
-
-export function prependToElement(parent: HTMLElement, content: ElementContent) {
-  let newEls = normalizeContent(content)
-  let afterEl = parent.firstChild || null // if no firstChild, will append to end, but that's okay, b/c there were no children
-
-  for (let i = 0; i < newEls.length; i++) {
-    parent.insertBefore(newEls[i], afterEl)
-  }
-}
-
-export function insertAfterElement(refEl: HTMLElement, content: ElementContent) {
-  let newEls = normalizeContent(content)
-  let afterEl = refEl.nextSibling || null
-
-  for (let i = 0; i < newEls.length; i++) {
-    refEl.parentNode.insertBefore(newEls[i], afterEl)
-  }
-}
-
-function normalizeContent(content: ElementContent): Node[] {
-  let els
-  if (typeof content === 'string') {
-    els = htmlToElements(content)
-  } else if (content instanceof Node) {
-    els = [ content ]
-  } else { // Node[] or NodeList
-    els = Array.prototype.slice.call(content)
-  }
-  return els
-}
-
-export function removeElement(el: HTMLElement) {
+export function removeElement(el: HTMLElement) { // removes nodes in addition to elements. bad name
   if (el.parentNode) {
     el.parentNode.removeChild(el)
+  }
+}
+
+
+export function injectHtml(el: HTMLElement, html: string) {
+  el.innerHTML = html
+}
+
+
+export function injectDomNodes(el: HTMLElement, domNodes: Node[] | NodeList) {
+  let oldNodes = Array.prototype.slice.call(el.childNodes) // TODO: use array util
+  let newNodes = Array.prototype.slice.call(domNodes) // TODO: use array util
+
+  if (!isArraysEqual(oldNodes, newNodes)) {
+    for (let newNode of newNodes) {
+      el.appendChild(newNode)
+    }
+    oldNodes.forEach(removeElement)
   }
 }
 
@@ -137,13 +58,16 @@ const closestMethod = Element.prototype.closest || function(selector) {
   return null
 }
 
+
 export function elementClosest(el: HTMLElement, selector: string): HTMLElement {
-  return closestMethod.call(el, selector)
+  return (closestMethod as any).call(el, selector)
 }
+
 
 export function elementMatches(el: HTMLElement, selector: string): HTMLElement {
   return matchesMethod.call(el, selector)
 }
+
 
 // accepts multiple subject els
 // returns a real array. good for methods like forEach
@@ -162,9 +86,10 @@ export function findElements(container: HTMLElement[] | HTMLElement | NodeListOf
   return allMatches
 }
 
+
 // accepts multiple subject els
-// only queries direct child elements
-export function findChildren(parent: HTMLElement[] | HTMLElement, selector?: string): HTMLElement[] {
+// only queries direct child elements // TODO: rename to findDirectChildren!
+export function findDirectChildren(parent: HTMLElement[] | HTMLElement, selector?: string): HTMLElement[] {
   let parents = parent instanceof HTMLElement ? [ parent ] : parent
   let allMatches = []
 
@@ -181,18 +106,6 @@ export function findChildren(parent: HTMLElement[] | HTMLElement, selector?: str
   }
 
   return allMatches
-}
-
-
-// Attributes
-// ----------------------------------------------------------------------------------------------------------------
-
-export function forceClassName(el: HTMLElement, className: string, bool) { // might not be used anywhere
-  if (bool) {
-    el.classList.add(className)
-  } else {
-    el.classList.remove(className)
-  }
 }
 
 

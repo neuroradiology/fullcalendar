@@ -14,8 +14,8 @@ export default {
     day: "Dagur",
     list: "Dagskrá"
   },
-  weekLabel: "Vika",
-  allDayHtml: "Allan<br/>daginn",
-  eventLimitText: "meira",
-  noEventsMessage: "Engir viðburðir til að sýna"
+  weekText: "Vika",
+  allDayText: "Allan daginn",
+  moreLinkText: "meira",
+  noEventsText: "Engir viðburðir til að sýna"
 };

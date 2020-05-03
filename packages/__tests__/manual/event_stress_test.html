@@ -33,13 +33,12 @@
     console.log("Events " + events.length);
     var runStart = new Date();
     $('#calendar').fullCalendar({
-      //eventLimit:true,
-      header: {
+      headerToolbar: {
         left: 'prev,next today',
         center: 'title',
         right: 'dayGridMonth,week,day'
       },
-      defaultDate: '2014-08-12',
+      initialDate: '2014-08-12',
       editable: true,
       events: events
     });

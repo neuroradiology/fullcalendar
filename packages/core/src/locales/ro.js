@@ -14,10 +14,10 @@ export default {
     day: "Zi",
     list: "Agendă"
   },
-  weekLabel: "Săpt",
+  weekText: "Săpt",
   allDayText: "Toată ziua",
-  eventLimitText: function(n) {
+  moreLinkText: function(n) {
     return "+alte " + n;
   },
-  noEventsMessage: "Nu există evenimente de afișat"
+  noEventsText: "Nu există evenimente de afișat"
 };

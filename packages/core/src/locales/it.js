@@ -14,10 +14,10 @@ export default {
     day: "Giorno",
     list: "Agenda"
   },
-  weekLabel: "Sm",
-  allDayHtml: "Tutto il<br/>giorno",
-  eventLimitText: function(n) {
+  weekText: "Sm",
+  allDayText: "Tutto il giorno",
+  moreLinkText: function(n) {
     return "+altri " + n;
   },
-  noEventsMessage: "Non ci sono eventi da visualizzare"
+  noEventsText: "Non ci sono eventi da visualizzare"
 };

@@ -16,7 +16,7 @@ startParam
 endParam
 cacheParam
 ignoreTimezone
-allDayDefault
+defaultAllDay
 editable
 eventColor
 eventTextColor
@@ -28,7 +28,7 @@ startParam
 endParam
 cacheParam
 ignoreTimezone
-allDayDefault
+defaultAllDay
 className
 editable
 color
@@ -54,7 +54,7 @@ $(document).ready(function() {
   var y = date.getFullYear();
 
   $('#calendar').fullCalendar({
-    header: {
+    headerToolbar: {
       left: 'prev,next today',
       center: 'title',
       right: 'month,week,dayGridWeek,day,dayGridDay'

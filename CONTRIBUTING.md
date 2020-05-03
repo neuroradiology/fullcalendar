@@ -37,17 +37,16 @@ You will need [Git][git], [Node][node] and NPM installed.
 
 Then, clone FullCalendar's git repo:
 
-	git clone git://github.com/fullcalendar/fullcalendar.git
+	git clone --recursive git://github.com/fullcalendar/fullcalendar.git
+
+The recursive flag will clone all submodules as well. fullcalendar-scheduler and the example projects are located within submodules.
 
 Enter the directory and install FullCalendar's dependencies:
 
 	cd fullcalendar
 	npm install
 
-
-## What to Edit
-
-When modifying files, please do not edit generated files in the `dist/` directories. Please edit the original files in the `src/` directories.
+*NOTE:* The install command will take a LONG time. We are working to fix this.
 
 
 ## Development Workflow
@@ -63,6 +62,19 @@ Or, you can run a script that automatically rebuilds whenever you save a source 
 If you want to clean up the generated files, run:
 
 	npm run clean
+
+
+## Running Test
+
+To run the Karma tests, you must first run `npm run watch`. Then, in separate console, run:
+
+  npm run test
+
+You will be given a URL to visit in your browser. When you visit this URL the tests will automatically run.
+
+If you want to execute the tests headlessly, run:
+
+  npm run test:single
 
 
 ## Git

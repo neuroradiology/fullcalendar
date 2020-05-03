@@ -1,9 +1,8 @@
 import { ViewDef, compileViewDefs } from './view-def'
 import { Duration, createDuration, greatestDurationDenominator, getWeeksFromInput } from '../datelib/duration'
-import OptionsManager from '../OptionsManager'
 import { mapHash } from '../util/object'
 import { globalDefaults } from '../options'
-import { ViewConfigInputHash, parseViewConfigs, ViewConfigHash, ViewClass } from './view-config'
+import { ViewConfigInputHash, parseViewConfigs, ViewConfigHash, ViewComponentType } from './view-config'
 
 /*
 Represents everything needed to instantiate a new view instance,
@@ -15,33 +14,36 @@ ViewConfig -> ViewDef -> ViewSpec
 */
 export interface ViewSpec {
   type: string
-  class: ViewClass
+  component: ViewComponentType
   duration: Duration
   durationUnit: string
   singleUnit: string
-  options: any
+  optionDefaults: any
+  optionOverrides: any
   buttonTextOverride: string
   buttonTextDefault: string
 }
 
 export type ViewSpecHash = { [viewType: string]: ViewSpec }
 
-export function buildViewSpecs(defaultInputs: ViewConfigInputHash, optionsManager: OptionsManager): ViewSpecHash {
+
+export function buildViewSpecs(defaultInputs: ViewConfigInputHash, optionOverrides, dynamicOptionOverrides, localeDefaults): ViewSpecHash {
   let defaultConfigs = parseViewConfigs(defaultInputs)
-  let overrideConfigs = parseViewConfigs(optionsManager.overrides.views)
+  let overrideConfigs = parseViewConfigs(optionOverrides.views)
   let viewDefs = compileViewDefs(defaultConfigs, overrideConfigs)
 
   return mapHash(viewDefs, function(viewDef) {
-    return buildViewSpec(viewDef, overrideConfigs, optionsManager)
+    return buildViewSpec(viewDef, overrideConfigs, optionOverrides, dynamicOptionOverrides, localeDefaults)
   })
 }
 
-function buildViewSpec(viewDef: ViewDef, overrideConfigs: ViewConfigHash, optionsManager: OptionsManager): ViewSpec {
+
+function buildViewSpec(viewDef: ViewDef, overrideConfigs: ViewConfigHash, optionOverrides, dynamicOptionOverrides, localeDefaults): ViewSpec {
   let durationInput =
     viewDef.overrides.duration ||
     viewDef.defaults.duration ||
-    optionsManager.dynamicOverrides.duration ||
-    optionsManager.overrides.duration
+    dynamicOptionOverrides.duration ||
+    optionOverrides.duration
 
   let duration = null
   let durationUnit = ''
@@ -66,8 +68,8 @@ function buildViewSpec(viewDef: ViewDef, overrideConfigs: ViewConfigHash, option
     }
   }
 
-  let queryButtonText = function(options) {
-    let buttonTextMap = options.buttonText || {}
+  let queryButtonText = function(optionsSubset) {
+    let buttonTextMap = optionsSubset.buttonText || {}
     let buttonTextKey = viewDef.defaults.buttonTextKey
 
     if (buttonTextKey != null && buttonTextMap[buttonTextKey] != null) {
@@ -85,30 +87,20 @@ function buildViewSpec(viewDef: ViewDef, overrideConfigs: ViewConfigHash, option
 
   return {
     type: viewDef.type,
-    class: viewDef.class,
+    component: viewDef.component,
     duration,
     durationUnit,
     singleUnit,
-
-    options: {
-      ...globalDefaults,
-      ...viewDef.defaults,
-      ...optionsManager.dirDefaults,
-      ...optionsManager.localeDefaults,
-      ...optionsManager.overrides,
-      ...singleUnitOverrides,
-      ...viewDef.overrides,
-      ...optionsManager.dynamicOverrides
-    },
+    optionDefaults: viewDef.defaults,
+    optionOverrides: { ...singleUnitOverrides, ...viewDef.overrides },
 
     buttonTextOverride:
-      queryButtonText(optionsManager.dynamicOverrides) ||
-      queryButtonText(optionsManager.overrides) || // constructor-specified buttonText lookup hash takes precedence
+      queryButtonText(dynamicOptionOverrides) ||
+      queryButtonText(optionOverrides) || // constructor-specified buttonText lookup hash takes precedence
       viewDef.overrides.buttonText, // `buttonText` for view-specific options is a string
 
     buttonTextDefault:
-      queryButtonText(optionsManager.localeDefaults) ||
-      queryButtonText(optionsManager.dirDefaults) ||
+      queryButtonText(localeDefaults) ||
       viewDef.defaults.buttonText ||
       queryButtonText(globalDefaults) ||
       viewDef.type // fall back to given view name

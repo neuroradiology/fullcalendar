@@ -1,7 +1,9 @@
 import { DateMarker, timeAsMs } from './marker'
 import { CalendarSystem } from './calendar-system'
 import { Locale } from './locale'
-import { DateFormatter, DateFormattingContext, ZonedMarker, formatTimeZoneOffset } from './formatting'
+import { DateFormatter, DateFormattingContext } from './DateFormatter'
+import { ZonedMarker } from './zoned-marker'
+import { formatTimeZoneOffset } from './formatting-utils'
 import { memoize } from '../util/memoize'
 
 const EXTENDED_SETTINGS_AND_SEVERITIES = {
@@ -116,8 +118,10 @@ export class NativeFormatter implements DateFormatter {
         return 'month'
       case 3:
         return 'week'
-      default:
+      case 2:
         return 'day'
+      default:
+        return 'time' // really?
     }
   }
 
@@ -140,7 +144,7 @@ function buildFormattingFunc(
     return function(date: ZonedMarker) {
       return formatWeekNumber(
         context.computeWeekNumber(date.marker),
-        context.weekLabel,
+        context.weekText,
         context.locale,
         extendedSettings.week
       )
@@ -273,13 +277,13 @@ function injectTzoStr(s: string, tzoStr: string): string {
   return s
 }
 
-function formatWeekNumber(num: number, weekLabel: string, locale: Locale, display?: 'numeric' | 'narrow' | 'short'): string {
+function formatWeekNumber(num: number, weekText: string, locale: Locale, display?: 'numeric' | 'narrow' | 'short'): string {
   let parts = []
 
   if (display === 'narrow') {
-    parts.push(weekLabel)
+    parts.push(weekText)
   } else if (display === 'short') {
-    parts.push(weekLabel, ' ')
+    parts.push(weekText, ' ')
   }
   // otherwise, considered 'numeric'
 

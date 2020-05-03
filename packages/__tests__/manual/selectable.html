@@ -19,17 +19,17 @@
   $(document).ready(function() {
 
     calendar = $('#calendar').fullCalendar({
-      header: {
+      headerToolbar: {
         left: 'prev,next today',
         center: 'title',
         right: 'month,week,dayGridWeek,day,dayGridDay'
       },
       date: '2014-01-12',
-      defaultView: 'dayGridMonth',
+      initialView: 'dayGridMonth',
 
       //firstDay: 1,
-      //dir: 'rtl',
-      //minTime: 7,
+      //direction: 'rtl',
+      //slotMinTime: 7,
       //weekends: false,
       //allDaySlot: false,
       //hiddenDays: [ 2, 4 ], // tuesdays and thursdays

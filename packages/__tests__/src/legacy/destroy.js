@@ -1,24 +1,24 @@
-import ListenerCounter from '../lib/ListenerCounter'
+import { ListenerCounter } from '../lib/ListenerCounter'
 
 describe('destroy', function() {
 
   describe('when calendar is LTR', function() {
     it('cleans up all classNames on the root element', function() {
       initCalendar({
-        dir: 'ltr'
+        direction: 'ltr'
       })
       currentCalendar.destroy()
-      expect($('#calendar')[0].className).toBe('')
+      expect(currentCalendar.el.className).toBe('')
     })
   })
 
   describe('when calendar is RTL', function() {
     it('cleans up all classNames on the root element', function() {
       initCalendar({
-        dir: 'rtl'
+        direction: 'rtl'
       })
       currentCalendar.destroy()
-      expect($('#calendar')[0].className).toBe('')
+      expect(currentCalendar.el.className).toBe('')
     })
   })
 
@@ -28,12 +28,12 @@ describe('destroy', function() {
     it('cleans up all classNames on the root element', function() {
       initCalendar()
       currentCalendar.destroy()
-      expect($('#calendar')[0].className).toBe('')
+      expect(currentCalendar.el.className).toBe('')
     })
   })
 
   pushOptions({
-    defaultDate: '2014-12-01',
+    initialDate: '2014-12-01',
     droppable: true, // likely to attach document handler
     editable: true, // same
     events: [
@@ -41,7 +41,7 @@ describe('destroy', function() {
     ]
   })
 
-  describeOptions('defaultView', {
+  describeOptions('initialView', {
     'when in dayGridWeek view': 'dayGridWeek',
     'when in week view': 'timeGridWeek',
     'when in listWeek view': 'listWeek',

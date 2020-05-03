@@ -9,15 +9,15 @@
 <script>
 
   $(document).ready(function() {
-    
+
     $('#calendar').fullCalendar({
-      header: {
+      headerToolbar: {
         left: 'prev,next today',
         center: 'title',
         right: 'month,week,dayGridWeek,day,dayGridDay'
       },
       editable: true,
-      defaultView: 'day',
+      initialView: 'day',
       firstHour: 0,
       year: 2013,
       month: 6, // July
@@ -29,13 +29,13 @@
     });
 
     $('#calendar-nooverlap').fullCalendar({
-      header: {
+      headerToolbar: {
         left: 'prev,next today',
         center: 'title',
         right: 'month,week,dayGridWeek,day,dayGridDay'
       },
       editable: true,
-      defaultView: 'day',
+      initialView: 'day',
       firstHour: 0,
       year: 2013,
       month: 6, // July
@@ -48,44 +48,44 @@
     });
 
     $('#calendar-rtl').fullCalendar({
-      header: {
+      headerToolbar: {
         left: 'prev,next today',
         center: 'title',
         right: 'month,week,dayGridWeek,day,dayGridDay'
       },
       editable: true,
-      defaultView: 'day',
+      initialView: 'day',
       firstHour: 0,
       year: 2013,
       month: 6, // July
       date: 31,
       events: 'slot_event_overlap.json',
-      dir: 'rtl',
+      direction: 'rtl',
       _eventsPositioned: function() {
         testOverlap($('#calendar-rtl'), true, true);
       }
     });
 
     $('#calendar-rtl-nooverlap').fullCalendar({
-      header: {
+      headerToolbar: {
         left: 'prev,next today',
         center: 'title',
         right: 'month,week,dayGridWeek,day,dayGridDay'
       },
       editable: true,
-      defaultView: 'day',
+      initialView: 'day',
       firstHour: 0,
       year: 2013,
       month: 6, // July
       date: 31,
       events: 'slot_event_overlap.json',
-      dir: 'rtl',
+      direction: 'rtl',
       slotEventOverlap: false,
       _eventsPositioned: function() {
         testOverlap($('#calendar-rtl-nooverlap'), false, true);
       }
     });
-    
+
   });
 
   function testOverlap(el, allowOverlap, isRtl) {

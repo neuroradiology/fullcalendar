@@ -1,7 +1,6 @@
-import Calendar from '../Calendar'
-
-import { EventInput } from './event'
+import { EventInput } from './event-parse'
 import { EventStore, parseEvents } from './event-store'
+import { ReducerContext } from '../reducers/ReducerContext'
 
 /*
 Utils for converting raw business hour input into an EventStore,
@@ -14,19 +13,19 @@ const DEF_DEFAULTS = {
   startTime: '09:00',
   endTime: '17:00',
   daysOfWeek: [ 1, 2, 3, 4, 5 ], // monday - friday
-  rendering: 'inverse-background',
-  classNames: 'fc-nonbusiness',
+  display: 'inverse-background',
+  classNames: 'fc-non-business',
   groupId: '_businessHours' // so multiple defs get grouped
 }
 
 /*
 TODO: pass around as EventDefHash!!!
 */
-export function parseBusinessHours(input: BusinessHoursInput, calendar: Calendar): EventStore {
+export function parseBusinessHours(input: BusinessHoursInput, context: ReducerContext): EventStore {
   return parseEvents(
     refineInputs(input),
     '',
-    calendar
+    context
   )
 }
 

@@ -1,9 +1,9 @@
-import { expectActiveRange } from './ViewDateUtils'
+import { expectActiveRange } from '../lib/ViewDateUtils'
 
 describe('view duration', function() {
   pushOptions({
-    defaultView: 'timeGrid',
-    defaultDate: '2017-03-15'
+    initialView: 'timeGrid',
+    initialDate: '2017-03-15'
   })
 
   describe('when specified as a week integer', function() {

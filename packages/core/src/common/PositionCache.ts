@@ -4,13 +4,10 @@ Records offset information for a set of elements, relative to an origin element.
 Can record the left/right OR the top/bottom OR both.
 Provides methods for querying the cache by position.
 */
-export default class PositionCache {
+export class PositionCache {
 
-  originClientRect: ClientRect
   els: HTMLElement[] // assumed to be siblings
-  originEl: HTMLElement // options can override the natural originEl
-  isHorizontal: boolean // whether to query for left/right/width
-  isVertical: boolean // whether to query for top/bottom/height
+  originClientRect: ClientRect
 
   // arrays of coordinates (from topleft of originEl)
   // caller can access these directly
@@ -21,25 +18,15 @@ export default class PositionCache {
 
 
   constructor(originEl: HTMLElement, els: HTMLElement[], isHorizontal: boolean, isVertical: boolean) {
-    this.originEl = originEl
     this.els = els
-    this.isHorizontal = isHorizontal
-    this.isVertical = isVertical
-  }
 
+    let originClientRect = this.originClientRect = originEl.getBoundingClientRect() // relative to viewport top-left
 
-  // Queries the els for coordinates and stores them.
-  // Call this method before using and of the get* methods below.
-  build() {
-    let originEl = this.originEl
-    let originClientRect = this.originClientRect =
-      originEl.getBoundingClientRect() // relative to viewport top-left
-
-    if (this.isHorizontal) {
+    if (isHorizontal) {
       this.buildElHorizontals(originClientRect.left)
     }
 
-    if (this.isVertical) {
+    if (isVertical) {
       this.buildElVerticals(originClientRect.top)
     }
   }

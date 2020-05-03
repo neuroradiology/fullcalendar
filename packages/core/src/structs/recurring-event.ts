@@ -1,9 +1,13 @@
-import { EventInput, EventDef } from './event'
+import { EventDef } from './event-def'
+import { EventInstance, createEventInstance } from './event-instance'
 import { DateRange } from '../datelib/date-range'
 import { DateEnv } from '../datelib/env'
 import { Duration } from '../datelib/duration'
 import { DateMarker, startOfDay } from '../datelib/marker'
 import { __assign } from 'tslib'
+import { EventStore } from './event-store'
+import { ReducerContext } from '../reducers/ReducerContext'
+import { filterHash } from '../util/object'
 
 /*
 The plugin system for defining how a recurring event is expanded into individual instances.
@@ -16,14 +20,14 @@ export interface ParsedRecurring {
 }
 
 export interface RecurringType {
-  parse: (rawEvent: EventInput, leftoverProps: any, dateEnv: DateEnv) => ParsedRecurring | null
+  parse: (rawEvent: any, leftoverProps: any, dateEnv: DateEnv) => ParsedRecurring | null
   expand: (typeData: any, framingRange: DateRange, dateEnv: DateEnv) => DateMarker[]
 }
 
 
 export function parseRecurring(
-  eventInput: EventInput,
-  allDayDefault: boolean | null,
+  eventInput: any,
+  defaultAllDay: boolean | null,
   dateEnv: DateEnv,
   recurringTypes: RecurringType[],
   leftovers: any
@@ -37,7 +41,7 @@ export function parseRecurring(
       let allDay = localLeftovers.allDay
       delete localLeftovers.allDay // remove from leftovers
       if (allDay == null) {
-        allDay = allDayDefault
+        allDay = defaultAllDay
         if (allDay == null) {
           allDay = parsed.allDayGuess
           if (allDay == null) {
@@ -54,7 +58,6 @@ export function parseRecurring(
         typeData: parsed.typeData,
         typeId: i
       }
-
     }
   }
 
@@ -62,10 +65,48 @@ export function parseRecurring(
 }
 
 
+export function expandRecurring(eventStore: EventStore, framingRange: DateRange, context: ReducerContext): EventStore {
+  let { dateEnv, pluginHooks, computedOptions } = context
+  let { defs, instances } = eventStore
+
+  // remove existing recurring instances
+  // TODO: bad. always expand events as a second step
+  instances = filterHash(instances, function(instance: EventInstance) {
+    return !defs[instance.defId].recurringDef
+  })
+
+  for (let defId in defs) {
+    let def = defs[defId]
+
+    if (def.recurringDef) {
+      let duration = def.recurringDef.duration
+
+      if (!duration) {
+        duration = def.allDay ?
+          computedOptions.defaultAllDayEventDuration :
+          computedOptions.defaultTimedEventDuration
+      }
+
+      let starts = expandRecurringRanges(def, duration, framingRange, dateEnv, pluginHooks.recurringTypes)
+
+      for (let start of starts) {
+        let instance = createEventInstance(defId, {
+          start,
+          end: dateEnv.add(start, duration)
+        })
+        instances[instance.instanceId] = instance
+      }
+    }
+  }
+
+  return { defs, instances }
+}
+
+
 /*
 Event MUST have a recurringDef
 */
-export function expandRecurringRanges(
+function expandRecurringRanges(
   eventDef: EventDef,
   duration: Duration,
   framingRange: DateRange,

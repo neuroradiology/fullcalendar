@@ -14,10 +14,10 @@ export default {
     day: "Дан",
     list: "Планер"
   },
-  weekLabel: "Сед",
+  weekText: "Сед",
   allDayText: "Цео дан",
-  eventLimitText: function(n) {
+  moreLinkText: function(n) {
     return "+ још " + n;
   },
-  noEventsMessage: "Нема догађаја за приказ"
+  noEventsText: "Нема догађаја за приказ"
 };

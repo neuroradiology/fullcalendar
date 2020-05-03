@@ -51,9 +51,11 @@ let recurring: RecurringType = {
 
 }
 
+
 export default createPlugin({
   recurringTypes: [ recurring ]
 })
+
 
 function parseRRule(input, dateEnv: DateEnv) {
   let allDayGuess = null

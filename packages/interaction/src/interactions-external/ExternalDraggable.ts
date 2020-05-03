@@ -1,6 +1,6 @@
 import { globalDefaults, PointerDragEvent } from '@fullcalendar/core'
-import FeaturefulElementDragging from '../dnd/FeaturefulElementDragging'
-import ExternalElementDragging, { DragMetaGenerator } from './ExternalElementDragging'
+import { FeaturefulElementDragging } from '../dnd/FeaturefulElementDragging'
+import { ExternalElementDragging, DragMetaGenerator } from './ExternalElementDragging'
 
 export interface ExternalDraggableSettings {
   eventData?: DragMetaGenerator
@@ -15,7 +15,7 @@ Makes an element (that is *external* to any calendar) draggable.
 Can pass in data that determines how an event will be created when dropped onto a calendar.
 Leverages FullCalendar's internal drag-n-drop functionality WITHOUT a third-party drag system.
 */
-export default class ExternalDraggable {
+export class ExternalDraggable {
 
   dragging: FeaturefulElementDragging
   settings: ExternalDraggableSettings
@@ -61,7 +61,7 @@ export default class ExternalDraggable {
       this.dragging.delay &&
       (ev.subjectEl as HTMLElement).classList.contains('fc-event')
     ) {
-      this.dragging.mirror.getMirrorEl().classList.add('fc-selected')
+      this.dragging.mirror.getMirrorEl().classList.add('fc-event-selected')
     }
   }
 

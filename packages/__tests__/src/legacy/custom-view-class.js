@@ -1,25 +1,20 @@
-import { View, createPlugin } from '@fullcalendar/core'
+import { createPlugin, sliceEvents } from '@fullcalendar/core'
+import { CalendarWrapper } from '../lib/wrappers/CalendarWrapper'
 
-describe('custom view class', function() {
+describe('custom view class', function() { // TODO: rename file
 
   it('calls all standard methods with correct parameters', function() {
 
-    class CustomView extends View {
+    const CustomViewConfig = {
+      classNames: 'awesome-view',
+      didMount: function() {},
+      willUnmount: function() {},
 
-      renderDates(dateProfile) {
-        expect(dateProfile.activeRange.start instanceof Date).toBe(true)
-        expect(dateProfile.activeRange.end instanceof Date).toBe(true)
-      }
+      content(props) {
+        expect(props.dateProfile.activeRange.start instanceof Date).toBe(true)
+        expect(props.dateProfile.activeRange.end instanceof Date).toBe(true)
 
-      updateSize(isResize, height, isAuto) {
-        expect(typeof isResize).toBe('boolean')
-        expect(typeof height).toBe('number')
-        expect(typeof isAuto).toBe('boolean')
-      }
-
-      renderEvents(eventStore) {
-        let eventRanges = this.sliceEvents(eventStore, true) // allDay=true
-
+        let eventRanges = sliceEvents(props, true) // allDay=true
         expect(Array.isArray(eventRanges)).toBe(true)
         expect(eventRanges.length).toBe(1)
         expect(typeof eventRanges[0].def).toBe('object')
@@ -29,41 +24,41 @@ describe('custom view class', function() {
         expect(eventRanges[0].isEnd).toBe(true)
         expect(eventRanges[0].range.start instanceof Date).toBe(true)
         expect(eventRanges[0].range.end instanceof Date).toBe(true)
-      }
 
-      unrenderEvents() {
-      }
+        let dateSelection = props.dateSelection
+        if (!dateSelection) {
+          expect(dateSelection).toBe(null)
+        } else {
+          expect(typeof dateSelection).toBe('object')
+          expect(dateSelection.allDay).toBe(true)
+          expect(dateSelection.range.start instanceof Date).toBe(true)
+          expect(dateSelection.range.end instanceof Date).toBe(true)
+        }
 
-      renderDateSelection(dateSpan) {
-        expect(typeof dateSpan).toBe('object')
-        expect(dateSpan.allDay).toBe(true)
-        expect(dateSpan.range.start instanceof Date).toBe(true)
-        expect(dateSpan.range.end instanceof Date).toBe(true)
+        return { html: '<div class="hello-world">hello world</div>' }
       }
-
-      unrenderDateSelection() {
-      }
-
     }
 
-    spyOn(CustomView.prototype, 'initialize').and.callThrough()
-    spyOn(CustomView.prototype, 'renderDates').and.callThrough()
-    spyOn(CustomView.prototype, 'updateSize').and.callThrough()
-    spyOn(CustomView.prototype, 'renderEvents').and.callThrough()
-    spyOn(CustomView.prototype, 'unrenderEvents').and.callThrough()
-    spyOn(CustomView.prototype, 'renderDateSelection').and.callThrough()
-    spyOn(CustomView.prototype, 'unrenderDateSelection').and.callThrough()
+    spyOn(CustomViewConfig, 'didMount').and.callThrough()
+    spyOn(CustomViewConfig, 'content').and.callThrough()
+    spyOn(CustomViewConfig, 'willUnmount').and.callThrough()
 
-    initCalendar({
+    function resetCounts() {
+      CustomViewConfig.didMount.calls.reset()
+      CustomViewConfig.content.calls.reset()
+      CustomViewConfig.willUnmount.calls.reset()
+    }
+
+    let calendar = initCalendar({
       plugins: [
         createPlugin({
           views: {
-            custom: CustomView
+            custom: CustomViewConfig
           }
         })
       ],
-      defaultView: 'custom',
-      defaultDate: '2014-12-25', // will end up being a single-day view
+      initialView: 'custom',
+      initialDate: '2014-12-25', // will end up being a single-day view
       events: [
         {
           title: 'Holidays',
@@ -72,23 +67,33 @@ describe('custom view class', function() {
         }
       ]
     })
+    let calendarWrapper = new CalendarWrapper(calendar)
 
-    expect(CustomView.prototype.initialize).toHaveBeenCalled()
-    expect(CustomView.prototype.renderDates).toHaveBeenCalled()
-    expect(CustomView.prototype.updateSize).toHaveBeenCalled()
-    expect(CustomView.prototype.renderEvents).toHaveBeenCalled()
+    let viewEl = calendarWrapper.getViewEl()
+    expect(viewEl).toHaveClass('awesome-view')
+    expect($(viewEl).find('.hello-world').length).toBe(1)
 
-    currentCalendar.rerenderEvents()
+    expect(CustomViewConfig.didMount.calls.count()).toBe(1)
+    expect(CustomViewConfig.content.calls.count()).toBe(1)
+    expect(CustomViewConfig.willUnmount.calls.count()).toBe(0)
 
-    expect(CustomView.prototype.unrenderEvents).toHaveBeenCalled()
+    resetCounts()
+    calendar.select('2014-12-25', '2014-01-01')
+    expect(CustomViewConfig.didMount.calls.count()).toBe(0)
+    expect(CustomViewConfig.content.calls.count()).toBe(1)
+    expect(CustomViewConfig.willUnmount.calls.count()).toBe(0)
 
-    currentCalendar.select('2014-12-25', '2014-01-01')
+    resetCounts()
+    calendar.unselect()
+    expect(CustomViewConfig.didMount.calls.count()).toBe(0)
+    expect(CustomViewConfig.content.calls.count()).toBe(1)
+    expect(CustomViewConfig.willUnmount.calls.count()).toBe(0)
 
-    expect(CustomView.prototype.renderDateSelection).toHaveBeenCalled()
-
-    currentCalendar.unselect()
-
-    expect(CustomView.prototype.unrenderDateSelection).toHaveBeenCalled()
+    resetCounts()
+    calendar.destroy()
+    expect(CustomViewConfig.didMount.calls.count()).toBe(0)
+    expect(CustomViewConfig.content.calls.count()).toBe(0)
+    expect(CustomViewConfig.willUnmount.calls.count()).toBe(1)
   })
 
 })

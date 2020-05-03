@@ -1,24 +1,25 @@
-import { checkEventRendering } from './TimeGridEventRenderUtils'
-import { directionallyTestSeg } from './DayGridEventRenderUtils'
+import { directionallyTestSeg } from '../lib/DayGridEventRenderUtils'
+import { TimeGridViewWrapper } from '../lib/wrappers/TimeGridViewWrapper'
 
-describe('event rendering with maxTime', function() {
+describe('event rendering with slotMaxTime', function() { // TODO: rename file
   pushOptions({
-    defaultView: 'timeGridWeek',
-    defaultDate: '2017-03-22',
+    initialView: 'timeGridWeek',
+    initialDate: '2017-03-22',
     scrollTime: '00:00'
   })
 
-  describe('when event is within extended maxTime', function() {
+  describe('when event is within extended slotMaxTime', function() {
     pushOptions({
-      maxTime: '26:00',
+      slotMaxTime: '26:00',
       events: [
         { start: '2017-03-22T00:00:00', end: '2017-03-22T02:00:00' }
       ]
     })
 
     it('renders two event elements in the correct places', function() {
-      initCalendar()
-      var res = checkEventRendering(
+      let calendar = initCalendar()
+      let timeGridWrapper = new TimeGridViewWrapper(calendar).timeGrid
+      let res = timeGridWrapper.checkEventRendering(
         '2017-03-22T00:00:00Z',
         '2017-03-22T02:00:00Z'
       )
@@ -30,8 +31,8 @@ describe('event rendering with maxTime', function() {
   // https://github.com/fullcalendar/fullcalendar/issues/4483
   it('displays events on the last day', function() {
     initCalendar({
-      defaultView: 'dayGridWeek',
-      maxTime: '20:00',
+      initialView: 'dayGridWeek',
+      slotMaxTime: '20:00',
       events: [
         { start: '2017-03-19', end: '2017-03-26' }
       ]
@@ -42,7 +43,7 @@ describe('event rendering with maxTime', function() {
       lastCol: 6,
       isStart: true,
       isEnd: true
-    }, 'ltr')
+    })
   })
 
 })

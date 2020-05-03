@@ -14,10 +14,10 @@ export default {
     day: "День",
     list: "Повестка дня"
   },
-  weekLabel: "Нед",
+  weekText: "Нед",
   allDayText: "Весь день",
-  eventLimitText: function(n) {
+  moreLinkText: function(n) {
     return "+ ещё " + n;
   },
-  noEventsMessage: "Нет событий для отображения"
+  noEventsText: "Нет событий для отображения"
 };

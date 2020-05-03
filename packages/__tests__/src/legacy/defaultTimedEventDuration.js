@@ -1,10 +1,10 @@
-import { getEventEls } from '../event-render/EventRenderUtils'
+import { CalendarWrapper } from '../lib/wrappers/CalendarWrapper'
 
 describe('defaultTimedEventDuration', function() {
 
   pushOptions({
-    defaultDate: '2014-05-01',
-    defaultView: 'dayGridMonth',
+    initialDate: '2014-05-01',
+    initialView: 'dayGridMonth',
     timeZone: 'UTC'
   })
 
@@ -52,11 +52,11 @@ describe('defaultTimedEventDuration', function() {
     describe('with week view', function() {
 
       pushOptions({
-        defaultView: 'timeGridWeek'
+        initialView: 'timeGridWeek'
       })
 
-      it('renders a timed event with no `end` to appear to have the default duration', function(done) {
-        initCalendar({
+      it('renders a timed event with no `end` to appear to have the default duration', function() {
+        let calendar = initCalendar({
           defaultTimedEventDuration: '01:15:00',
           events: [
             {
@@ -72,28 +72,27 @@ describe('defaultTimedEventDuration', function() {
               allDay: false,
               start: '2014-05-02T04:00:00'
             }
-          ],
-          _eventsPositioned: function() {
-            var eventElms = getEventEls()
-            var height0 = eventElms.eq(0).outerHeight()
-            var height1 = eventElms.eq(1).outerHeight()
-            expect(height0).toBeGreaterThan(0)
-            expect(height0).toEqual(height1)
-            done()
-          }
+          ]
         })
+
+        let calendarWrapper = new CalendarWrapper(calendar)
+        var eventElms = calendarWrapper.getEventEls()
+
+        var height0 = eventElms[0].offsetHeight
+        var height1 = eventElms[1].offsetHeight
+        expect(height0).toBeGreaterThan(0)
+        expect(height0).toEqual(height1)
       })
     })
 
     describe('with dayGridWeek view', function() {
 
       pushOptions({
-        defaultView: 'dayGridWeek'
+        initialView: 'dayGridWeek'
       })
 
-      it('renders a timed event with no `end` to appear to have the default duration', function(done) {
-
-        initCalendar({
+      it('renders a timed event with no `end` to appear to have the default duration', function() {
+        let calendar = initCalendar({
           defaultTimedEventDuration: { days: 2 },
           events: [
             {
@@ -109,16 +108,16 @@ describe('defaultTimedEventDuration', function() {
               allDay: false,
               start: '2014-04-28T04:00:00'
             }
-          ],
-          _eventsPositioned: function() {
-            var eventElms = getEventEls()
-            var width0 = eventElms.eq(0).outerWidth()
-            var width1 = eventElms.eq(1).outerWidth()
-            expect(width0).toBeGreaterThan(0)
-            expect(width0).toEqual(width1)
-            done()
-          }
+          ]
         })
+
+        let calendarWrapper = new CalendarWrapper(calendar)
+        var eventElms = calendarWrapper.getEventEls()
+
+        var width0 = eventElms[0].offsetWidth
+        var width1 = eventElms[1].offsetWidth
+        expect(width0).toBeGreaterThan(0)
+        expect(width0).toEqual(width1)
       })
     })
   })

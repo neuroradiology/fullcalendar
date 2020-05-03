@@ -78,7 +78,7 @@ export function mapHash<InputItem, OutputItem>(
 }
 
 
-export function arrayToHash(a): { [key: string]: true } {
+export function arrayToHash(a): { [key: string]: true } { // TODO: rename to strinArrayToHash or something
   let hash = {}
 
   for (let item of a) {
@@ -89,7 +89,20 @@ export function arrayToHash(a): { [key: string]: true } {
 }
 
 
-export function hashValuesToArray(obj) {
+export function buildHashFromArray<Item, ItemRes>(a: Item[], func: (item: Item, index: number) => [ string, ItemRes ]) {
+  let hash: { [key: string]: ItemRes } = {}
+
+  for (let i = 0; i < a.length; i++) {
+    let tuple = func(a[i], i)
+
+    hash[tuple[0]] = tuple[1]
+  }
+
+  return hash
+}
+
+
+export function hashValuesToArray(obj) { // can't use Object.values yet because of no IE support
   let a = []
 
   for (let key in obj) {
@@ -100,7 +113,11 @@ export function hashValuesToArray(obj) {
 }
 
 
-export function isPropsEqual(obj0, obj1) {
+export function isPropsEqual(obj0, obj1) { // TODO: merge with compareObjs
+
+  if (obj0 === obj1) {
+    return true
+  }
 
   for (let key in obj0) {
     if (hasOwnProperty.call(obj0, key)) {
@@ -119,4 +136,97 @@ export function isPropsEqual(obj0, obj1) {
   }
 
   return true
+}
+
+
+export function getUnequalProps(obj0, obj1) {
+  let keys: string[] = []
+
+  for (let key in obj0) {
+    if (hasOwnProperty.call(obj0, key)) {
+      if (!(key in obj1)) {
+        keys.push(key)
+      }
+    }
+  }
+
+  for (let key in obj1) {
+    if (hasOwnProperty.call(obj1, key)) {
+      if (obj0[key] !== obj1[key]) {
+        keys.push(key)
+      }
+    }
+  }
+
+  return keys
+}
+
+
+
+export type EqualityFunc<T> = (a: T, b: T) => boolean
+export type EqualityThing<T> = EqualityFunc<T> | true
+
+export type EqualityFuncs<ObjType> = { // not really just a "func" anymore
+  [K in keyof ObjType]?: EqualityThing<ObjType[K]>
+}
+
+export function compareObjs(oldProps, newProps, equalityFuncs: EqualityFuncs<any> = {}) {
+
+  if (oldProps === newProps) {
+    return true
+  }
+
+  for (let key in newProps) {
+    if (key in oldProps && isObjValsEqual(oldProps[key], newProps[key], equalityFuncs[key])) {
+      ; // equal
+    } else {
+      return false
+    }
+  }
+
+  // check for props that were omitted in the new
+  for (let key in oldProps) {
+    if (!(key in newProps)) {
+      return false
+    }
+  }
+
+  return true
+}
+
+/*
+assumed "true" equality for handler names like "onReceiveSomething"
+*/
+function isObjValsEqual<T>(val0: T, val1: T, comparator: EqualityThing<T>) {
+  if (val0 === val1 || comparator === true) {
+    return true
+  }
+  if (comparator) {
+    return comparator(val0, val1)
+  }
+  return false
+}
+
+
+export function collectFromHash<Item>(
+  hash: { [key: string]: Item },
+  startIndex = 0,
+  endIndex?: number,
+  step = 1,
+) {
+  let res: Item[] = []
+
+  if (endIndex == null) {
+    endIndex = Object.keys(hash).length
+  }
+
+  for (let i = startIndex; i < endIndex; i += step) {
+    let val = hash[i]
+
+    if (val !== undefined) { // will disregard undefined for sparse arrays
+      res.push(val)
+    }
+  }
+
+  return res
 }

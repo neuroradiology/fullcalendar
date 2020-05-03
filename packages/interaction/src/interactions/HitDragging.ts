@@ -1,5 +1,5 @@
 import {
-  EmitterMixin, PointerDragEvent,
+  Emitter, PointerDragEvent,
   isDateSpansEqual,
   computeRect,
   constrainPoint, intersectRects, getRectCenter, diffPoints, Point,
@@ -9,7 +9,7 @@ import {
   mapHash,
   ElementDragging
 } from '@fullcalendar/core'
-import OffsetTracker from '../OffsetTracker'
+import { OffsetTracker } from '../OffsetTracker'
 
 /*
 Tracks movement over multiple droppable areas (aka "hits")
@@ -24,11 +24,11 @@ emits:
 - (hitchange - again, to null, if ended over a hit)
 - dragend
 */
-export default class HitDragging {
+export class HitDragging {
 
   droppableStore: InteractionSettingsStore
   dragging: ElementDragging
-  emitter: EmitterMixin
+  emitter: Emitter
 
   // options that can be set by caller
   useSubjectCenter: boolean = false
@@ -51,7 +51,7 @@ export default class HitDragging {
     dragging.emitter.on('dragend', this.handleDragEnd)
 
     this.dragging = dragging
-    this.emitter = new EmitterMixin()
+    this.emitter = new Emitter()
   }
 
   handlePointerDown = (ev: PointerDragEvent) => {
@@ -140,7 +140,7 @@ export default class HitDragging {
 
   prepareHits() {
     this.offsetTrackers = mapHash(this.droppableStore, function(interactionSettings) {
-      interactionSettings.component.buildPositionCaches()
+      interactionSettings.component.prepareHits()
 
       return new OffsetTracker(interactionSettings.el)
     })
@@ -164,7 +164,10 @@ export default class HitDragging {
       let component = droppableStore[id].component
       let offsetTracker = offsetTrackers[id]
 
-      if (offsetTracker.isWithinClipping(offsetLeft, offsetTop)) {
+      if (
+        offsetTracker && // wasn't destroyed mid-drag
+        offsetTracker.isWithinClipping(offsetLeft, offsetTop)
+      ) {
         let originLeft = offsetTracker.computeLeft()
         let originTop = offsetTracker.computeTop()
         let positionLeft = offsetLeft - originLeft
@@ -179,13 +182,13 @@ export default class HitDragging {
           positionTop >= 0 && positionTop < height
         ) {
           let hit = component.queryHit(positionLeft, positionTop, width, height)
+          let dateProfile = component.context.getCurrentState().dateProfile
 
           if (
             hit &&
             (
               // make sure the hit is within activeRange, meaning it's not a deal cell
-              !component.props.dateProfile || // hack for DayTile
-              rangeContainsRange(component.props.dateProfile.activeRange, hit.dateSpan.range)
+              rangeContainsRange(dateProfile.activeRange, hit.dateSpan.range)
             ) &&
             (!bestHit || hit.layer > bestHit.layer)
           ) {

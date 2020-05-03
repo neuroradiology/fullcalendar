@@ -2,11 +2,8 @@
 <html>
 <head>
 <meta charset='utf-8' />
-<link href='../packages/core/dist/main.css' rel='stylesheet' />
-<link href='../packages/daygrid/dist/main.css' rel='stylesheet' />
-<script src='../packages/core/dist/main.js'></script>
-<script src='../packages/interaction/dist/main.js'></script>
-<script src='../packages/daygrid/dist/main.js'></script>
+<link href='../packages/bundle/dist/main.css' rel='stylesheet' />
+<script src='../packages/bundle/dist/main.js'></script>
 <script>
 
   document.addEventListener('DOMContentLoaded', function() {
@@ -14,9 +11,8 @@
     var destCalendarEl = document.getElementById('destination-calendar');
 
     var srcCalendar = new FullCalendar.Calendar(srcCalendarEl, {
-      plugins: [ 'interaction', 'dayGrid' ],
       editable: true,
-      defaultDate: '2020-02-12',
+      initialDate: '2020-02-12',
       events: [
         {
           title: 'event1',
@@ -35,8 +31,7 @@
     });
 
     var destCalendar = new FullCalendar.Calendar(destCalendarEl, {
-      plugins: [ 'interaction', 'dayGrid' ],
-      defaultDate: '2020-02-12',
+      initialDate: '2020-02-12',
       editable: true,
       droppable: true, // will let it receive events!
       eventReceive: function(info) {

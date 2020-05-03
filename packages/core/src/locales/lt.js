@@ -14,8 +14,8 @@ export default {
     day: "Diena",
     list: "Darbotvarkė"
   },
-  weekLabel: "SAV",
+  weekText: "SAV",
   allDayText: "Visą dieną",
-  eventLimitText: "daugiau",
-  noEventsMessage: "Nėra įvykių rodyti"
+  moreLinkText: "daugiau",
+  noEventsText: "Nėra įvykių rodyti"
 };

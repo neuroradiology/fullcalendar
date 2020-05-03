@@ -2,16 +2,9 @@
 <html>
 <head>
 <meta charset='utf-8' />
-<link href='../packages/core/dist/main.css' rel='stylesheet' />
-<link href='../packages/daygrid/dist/main.css' rel='stylesheet' />
-<link href='../packages/timegrid/dist/main.css' rel='stylesheet' />
-<link href='../packages/list/dist/main.css' rel='stylesheet' />
-<script src='../packages/core/dist/main.js'></script>
-<script src='../packages/core/dist/locales-all.js'></script>
-<script src='../packages/interaction/dist/main.js'></script>
-<script src='../packages/daygrid/dist/main.js'></script>
-<script src='../packages/timegrid/dist/main.js'></script>
-<script src='../packages/list/dist/main.js'></script>
+<link href='../packages/bundle/dist/main.css' rel='stylesheet' />
+<script src='../packages/bundle/dist/main.js'></script>
+<script src='../packages/bundle/dist/locales-all.js'></script>
 <script>
 
   document.addEventListener('DOMContentLoaded', function() {
@@ -20,19 +13,18 @@
     var calendarEl = document.getElementById('calendar');
 
     var calendar = new FullCalendar.Calendar(calendarEl, {
-      plugins: [ 'interaction', 'dayGrid', 'timeGrid', 'list' ],
-      header: {
+      headerToolbar: {
         left: 'prev,next today',
         center: 'title',
         right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
       },
-      defaultDate: '2020-02-12',
+      initialDate: '2020-02-12',
       locale: initialLocaleCode,
       buttonIcons: false, // show the prev/next text
       weekNumbers: true,
       navLinks: true, // can click day/week names to navigate views
       editable: true,
-      eventLimit: true, // allow "more" link when too many events
+      dayMaxEvents: true, // allow "more" link when too many events
       events: [
         {
           title: 'All Day Event',
@@ -130,7 +122,7 @@
   }
 
   #calendar {
-    max-width: 900px;
+    max-width: 1100px;
     margin: 40px auto;
     padding: 0 10px;
   }

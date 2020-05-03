@@ -1,4 +1,9 @@
 
+
+// TODO: new util arrayify?
+// Array.prototype.slice.call(
+
+
 export function removeMatching(array, testFunc) {
   let removeCnt = 0
   let i = 0
@@ -32,7 +37,13 @@ export function removeExact(array, exactVal) {
   return removeCnt
 }
 
-export function isArraysEqual(a0, a1) {
+
+export function isArraysEqual(a0, a1, equalityFunc?: (v0, v1) => boolean) { // TODO: better typing
+
+  if (a0 === a1) {
+    return true
+  }
+
   let len = a0.length
   let i
 
@@ -41,7 +52,7 @@ export function isArraysEqual(a0, a1) {
   }
 
   for (i = 0; i < len; i++) {
-    if (a0[i] !== a1[i]) {
+    if (!(equalityFunc ? equalityFunc(a0[i], a1[i]) : a0[i] === a1[i])) {
       return false
     }
   }

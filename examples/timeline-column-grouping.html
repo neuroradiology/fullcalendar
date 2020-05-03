@@ -2,35 +2,33 @@
 <html>
 <head>
 <meta charset='utf-8' />
-<link href='../packages/core/dist/main.css' rel='stylesheet' />
-<link href='../packages/daygrid/dist/main.css' rel='stylesheet' />
-<link href='../packages/timegrid/dist/main.css' rel='stylesheet' />
-<link href='../packages-premium/timeline/dist/main.css' rel='stylesheet' />
-<link href='../packages-premium/resource-timeline/dist/main.css' rel='stylesheet' />
-<script src='../packages/core/dist/main.js'></script>
-<script src='../packages/interaction/dist/main.js'></script>
-<script src='../packages/daygrid/dist/main.js'></script>
-<script src='../packages/timegrid/dist/main.js'></script>
-<script src='../packages-premium/timeline/dist/main.js'></script>
-<script src='../packages-premium/resource-common/dist/main.js'></script>
-<script src='../packages-premium/resource-timeline/dist/main.js'></script>
+<link href='../packages-premium/bundle/dist/main.css' rel='stylesheet' />
+<script src='../packages-premium/bundle/dist/main.js'></script>
 <script>
 
   document.addEventListener('DOMContentLoaded', function() {
     var calendarEl = document.getElementById('calendar');
 
     var calendar = new FullCalendar.Calendar(calendarEl, {
-      plugins: [ 'interaction', 'dayGrid', 'timeGrid', 'resourceTimeline' ],
-      now: '2020-02-07',
+
+      // resourceGroupLabelContent: function(arg) { console.log('resourceGroupLabelContent', arg); return 'group-label' },
+      // resourceGroupLabelDidMount: function(arg) { console.log('resourceGroupLabelDidMount', arg) },
+
+      // resourceLabelContent: function(arg) { console.log('resourceLabelContent', arg); return 'resource-label' },
+      // resourceLabelDidMount: function(arg) { console.log('resourceLabelDidMount', arg) },
+
+      initialDate: '2020-02-07',
       editable: true,
+      selectable: true,
+      nowIndicator: true,
       aspectRatio: 1.8,
       scrollTime: '00:00',
-      header: {
+      headerToolbar: {
         left: 'today prev,next',
         center: 'title',
         right: 'resourceTimelineDay,resourceTimelineThreeDays,timeGridWeek,dayGridMonth'
       },
-      defaultView: 'resourceTimelineDay',
+      initialView: 'resourceTimelineDay',
       views: {
         resourceTimelineThreeDays: {
           type: 'resourceTimeline',
@@ -39,18 +37,18 @@
         }
       },
       resourceAreaWidth: '40%',
-      resourceColumns: [
+      resourceAreaColumns: [
         {
           group: true,
-          labelText: 'Building',
+          headerContent: 'Building',
           field: 'building'
         },
         {
-          labelText: 'Room',
+          headerContent: 'Room',
           field: 'title'
         },
         {
-          labelText: 'Occupancy',
+          headerContent: 'Occupancy',
           field: 'occupancy'
         }
       ],
@@ -108,7 +106,7 @@
   }
 
   #calendar {
-    max-width: 900px;
+    max-width: 1100px;
     margin: 50px auto;
   }
 

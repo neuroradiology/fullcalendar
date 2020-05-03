@@ -14,10 +14,10 @@ export default {
     day: "Dan",
     list: "Raspored"
   },
-  weekLabel: "Sed",
+  weekText: "Sed",
   allDayText: "Cijeli dan",
-  eventLimitText: function(n) {
+  moreLinkText: function(n) {
     return "+ još " + n;
   },
-  noEventsMessage: "Nema događaja za prikazivanje"
+  noEventsText: "Nema događaja za prikazivanje"
 };

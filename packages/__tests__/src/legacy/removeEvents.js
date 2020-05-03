@@ -1,8 +1,10 @@
+import { CalendarWrapper } from "../lib/wrappers/CalendarWrapper"
+
 describe('removeEvents', function() {
 
   pushOptions({
-    defaultDate: '2014-06-24',
-    defaultView: 'dayGridMonth'
+    initialDate: '2014-06-24',
+    initialView: 'dayGridMonth'
   })
 
   function buildEventsWithoutIds() {
@@ -38,7 +40,8 @@ describe('removeEvents', function() {
           },
           function() {
             expect(currentCalendar.getEvents().length).toEqual(0)
-            expect($('.fc-event').length).toEqual(0)
+            let calendarWrapper = new CalendarWrapper(currentCalendar)
+            expect(calendarWrapper.getEventEls().length).toEqual(0)
           },
           done
         )
@@ -56,7 +59,8 @@ describe('removeEvents', function() {
           },
           function() {
             expect(currentCalendar.getEvents().length).toEqual(2)
-            expect($('.fc-event').length).toEqual(2)
+            let calendarWrapper = new CalendarWrapper(currentCalendar)
+            expect(calendarWrapper.getEventEls().length).toEqual(2)
             expect($('.event-zero').length).toEqual(1)
             expect($('.event-two').length).toEqual(1)
           },
@@ -75,7 +79,8 @@ describe('removeEvents', function() {
       },
       function() {
         expect(currentCalendar.getEvents().length).toEqual(2)
-        expect($('.fc-event').length).toEqual(2)
+        let calendarWrapper = new CalendarWrapper(currentCalendar)
+        expect(calendarWrapper.getEventEls().length).toEqual(2)
         expect($('.event-zero').length).toEqual(1)
         expect($('.event-two').length).toEqual(1)
       },
@@ -91,7 +96,8 @@ describe('removeEvents', function() {
       },
       function() {
         expect(currentCalendar.getEvents().length).toEqual(2)
-        expect($('.fc-event').length).toEqual(2)
+        let calendarWrapper = new CalendarWrapper(currentCalendar)
+        expect(calendarWrapper.getEventEls().length).toEqual(2)
         expect($('.event-zero').length).toEqual(1)
         expect($('.event-two').length).toEqual(1)
       },
@@ -107,7 +113,8 @@ describe('removeEvents', function() {
       },
       function() {
         expect(currentCalendar.getEvents().length).toEqual(2)
-        expect($('.fc-event').length).toEqual(2)
+        let calendarWrapper = new CalendarWrapper(currentCalendar)
+        expect(calendarWrapper.getEventEls().length).toEqual(2)
         expect($('.event-zero').length).toEqual(0)
         expect($('.event-non-zero').length).toEqual(2)
       },
@@ -117,37 +124,30 @@ describe('removeEvents', function() {
 
   // Verifies the actions in removeFunc executed correctly by calling checkFunc.
   function go(events, removeFunc, checkFunc, doneFunc) {
-    var called = false
     initCalendar({
-      events: events,
-      _eventsPositioned: function() {
-        if (!called) { // don't execute on subsequent removeEvents/next/prev
-          called = true
-
-          checkAllEvents() // make sure all events initially rendered correctly
-
-          removeFunc() // remove the events
-          setTimeout(function() { // because the event rerender will be queued because we're a level deep
-
-            checkFunc() // check correctness
-
-            // move the calendar back out of view, then back in
-            currentCalendar.next()
-            currentCalendar.prev()
-
-            // array event sources should maintain the same state
-            // whereas "dynamic" event sources should refetch and reset the state
-            if ($.isArray(events)) {
-              checkFunc() // for issue 2187
-            } else {
-              checkAllEvents()
-            }
-
-            doneFunc()
-          }, 0)
-        }
-      }
+      events
     })
+
+    checkAllEvents() // make sure all events initially rendered correctly
+    removeFunc() // remove the events
+    setTimeout(function() { // because the event rerender will be queued because we're a level deep
+
+      checkFunc() // check correctness
+
+      // move the calendar back out of view, then back in
+      currentCalendar.next()
+      currentCalendar.prev()
+
+      // array event sources should maintain the same state
+      // whereas "dynamic" event sources should refetch and reset the state
+      if ($.isArray(events)) {
+        checkFunc() // for issue 2187
+      } else {
+        checkAllEvents()
+      }
+
+      doneFunc()
+    }, 0)
   }
 
 
@@ -155,7 +155,8 @@ describe('removeEvents', function() {
   // has internal info on all the events.
   function checkAllEvents() {
     expect(currentCalendar.getEvents().length).toEqual(3)
-    expect($('.fc-event').length).toEqual(3)
+    let calendarWrapper = new CalendarWrapper(currentCalendar)
+    expect(calendarWrapper.getEventEls().length).toEqual(3)
   }
 
 })

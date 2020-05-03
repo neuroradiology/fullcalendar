@@ -14,8 +14,8 @@ export default {
     day: "Dzień",
     list: "Plan dnia"
   },
-  weekLabel: "Tydz",
+  weekText: "Tydz",
   allDayText: "Cały dzień",
-  eventLimitText: "więcej",
-  noEventsMessage: "Brak wydarzeń do wyświetlenia"
+  moreLinkText: "więcej",
+  noEventsText: "Brak wydarzeń do wyświetlenia"
 };

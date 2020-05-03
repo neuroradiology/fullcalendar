@@ -1,19 +1,19 @@
 import { DateTime as LuxonDateTime, Duration as LuxonDuration } from 'luxon'
 import { Calendar, Duration, NamedTimeZoneImpl, VerboseFormattingArg, createPlugin } from '@fullcalendar/core'
 
-export function toDateTime(date: Date, calendar: Calendar): LuxonDateTime {
+export function toLuxonDateTime(date: Date, calendar: Calendar): LuxonDateTime {
 
   if (!(calendar instanceof Calendar)) {
     throw new Error('must supply a Calendar instance')
   }
 
   return LuxonDateTime.fromJSDate(date, {
-    zone: calendar.dateEnv.timeZone,
-    locale: calendar.dateEnv.locale.codes[0]
+    zone: calendar.currentState.dateEnv.timeZone,
+    locale: calendar.currentState.dateEnv.locale.codes[0]
   })
 }
 
-export function toDuration(duration: Duration, calendar: Calendar): LuxonDuration {
+export function toLuxonDuration(duration: Duration, calendar: Calendar): LuxonDuration {
 
   if (!(calendar instanceof Calendar)) {
     throw new Error('must supply a Calendar instance')
@@ -21,7 +21,7 @@ export function toDuration(duration: Duration, calendar: Calendar): LuxonDuratio
 
   return LuxonDuration.fromObject({
     ...duration,
-    locale: calendar.dateEnv.locale.codes[0]
+    locale: calendar.currentState.dateEnv.locale.codes[0]
   })
 }
 
@@ -70,6 +70,7 @@ function formatWithCmdStr(cmdStr: string, arg: VerboseFormattingArg) {
     arg.localeCodes[0]
   ).toFormat(cmd.whole)
 }
+
 
 export default createPlugin({
   cmdFormatter: formatWithCmdStr,

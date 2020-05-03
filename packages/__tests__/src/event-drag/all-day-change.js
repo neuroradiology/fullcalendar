@@ -1,13 +1,13 @@
-import { drag } from './EventDragUtils'
-import { computeSpanRects } from '../view-render/TimeGridRenderUtils'
-import { getDayEl } from '../view-render/DayGridRenderUtils'
-import { getEventEls } from '../event-render/EventRenderUtils'
+import { drag } from '../lib/EventDragUtils'
 import { parseMarker, addMs } from '@fullcalendar/core'
+import { TimeGridViewWrapper } from '../lib/wrappers/TimeGridViewWrapper'
+import { intersectRects } from '../lib/geom'
+
 
 describe('allDay change', function() {
   pushOptions({
     timeZone: 'UTC',
-    defaultView: 'timeGridWeek',
+    initialView: 'timeGridWeek',
     now: '2018-09-03',
     scrollTime: 0,
     editable: true,
@@ -22,12 +22,20 @@ describe('allDay change', function() {
     })
 
     function doDrag() {
-      let startRect = getDayEl('2018-09-03')[0].getBoundingClientRect()
+      let viewWrapper = new TimeGridViewWrapper(currentCalendar)
+      let dayGridWrapper = viewWrapper.dayGrid
+      let timeGridWrapper = viewWrapper.timeGrid
+
+      let startRect = intersectRects(
+        dayGridWrapper.getDayEls('2018-09-03')[0].getBoundingClientRect(),
+        dayGridWrapper.getEventEls()[0].getBoundingClientRect()
+      )
       let endDate = parseMarker('2018-09-03T02:00:00').marker
-      var endRect = computeSpanRects(
+      var endRect = timeGridWrapper.computeSpanRects(
         endDate,
         addMs(endDate, 1000 * 60 * 30) // hardcoded 30 minute slot :(
       )[0]
+
       return drag(startRect, endRect, false) // debug=false
     }
 
@@ -75,8 +83,13 @@ describe('allDay change', function() {
     })
 
     function doDrag() {
-      let startRect = getEventEls()[0].getBoundingClientRect()
-      let endRect = getDayEl('2018-09-03')[0].getBoundingClientRect()
+      let viewWrapper = new TimeGridViewWrapper(currentCalendar)
+      let dayGridWrapper = viewWrapper.dayGrid
+      let timeGridWrapper = viewWrapper.timeGrid
+
+      let startRect = timeGridWrapper.getEventEls()[0].getBoundingClientRect()
+      let endRect = dayGridWrapper.getDayEls('2018-09-03')[0].getBoundingClientRect()
+
       return drag(startRect, endRect, false) // debug=false
     }
 

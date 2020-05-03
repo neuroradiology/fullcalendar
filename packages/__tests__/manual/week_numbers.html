@@ -18,7 +18,7 @@
     $('#calendar').fullCalendar({
 
       weekNumbers: true,
-      weekLabel: 'Wk',
+      weekText: 'Wk',
 
       //weekNumberCalculation: function(date) {
       //  return date.getMonth(); // inappropriate. but just for testing
@@ -26,10 +26,10 @@
 
       firstDay: 1,
       selectable: true,
-      //dir: 'rtl',
+      //direction: 'rtl',
 
       editable: true,
-      header: {
+      headerToolbar: {
         left: 'prev,next today',
         center: 'title',
         right: 'month,week,dayGridWeek,day,dayGridDay'

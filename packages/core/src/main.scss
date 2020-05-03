@@ -1,9 +1,21 @@
 
-@import './common/common';
-@import './common/standard';
-@import './toolbar';
-@import './view';
+@import './styles/vars';
+@import './styles/mixins';
 
-@media print {
-  @import './common/print';
-}
+@import './styles/page-root';
+@import './styles/calendar-root';
+
+@import './styles/icons';
+@import './styles/button';
+@import './styles/button-group';
+@import './styles/toolbar';
+@import './styles/scroller';
+@import './styles/scroller-harness';
+@import './styles/scrollgrid';
+@import './styles/sticky';
+@import './styles/view-harness';
+@import './styles/col-header';
+@import './styles/divider';
+@import './styles/bg';
+@import './styles/event';
+@import './styles/h-event';

@@ -10,8 +10,8 @@ export default {
     day: "天",
     list: "活動列表"
   },
-  weekLabel: "周",
+  weekText: "周",
   allDayText: "整天",
-  eventLimitText: '顯示更多',
-  noEventsMessage: "没有任何活動"
+  moreLinkText: '顯示更多',
+  noEventsText: "没有任何活動"
 };

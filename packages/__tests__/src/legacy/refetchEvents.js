@@ -1,16 +1,16 @@
+import { TimeGridViewWrapper } from "../lib/wrappers/TimeGridViewWrapper"
+
 describe('refetchEvents', function() {
 
   // there IS a similar test in automated-better, but does month view
   describe('when timeGrid events are rerendered', function() {
 
     it('keeps scroll after refetchEvents', function(done) {
-      var renderCalls = 0
-
-      initCalendar({
+      let calendar = initCalendar({
         now: '2015-08-07',
         scrollTime: '00:00',
         height: 400, // makes this test more consistent across viewports
-        defaultView: 'timeGridDay',
+        initialView: 'timeGridDay',
         events: function(arg, callback) {
           setTimeout(function() {
             callback([
@@ -21,23 +21,23 @@ describe('refetchEvents', function() {
               { id: '5', resourceId: 'f', start: '2015-08-07T00:30:00', end: '2015-08-07T02:30:00', title: 'event 5' }
             ])
           }, 100)
-        },
-        _eventsPositioned: function() {
-          var scrollEl = $('.fc-time-grid-container.fc-scroller')
-          renderCalls++
-          if (renderCalls === 1) {
-            setTimeout(function() {
-              scrollEl.scrollTop(100)
-              setTimeout(function() {
-                currentCalendar.refetchEvents()
-              }, 100)
-            }, 100)
-          } else if (renderCalls === 2) {
-            expect(scrollEl.scrollTop()).toBe(100)
-            done()
-          }
         }
       })
+
+      setTimeout(function() {
+        let viewWrapper = new TimeGridViewWrapper(calendar)
+        let scrollEl = viewWrapper.getScrollerEl()
+
+        scrollEl.scrollTop = 100
+        setTimeout(function() {
+          currentCalendar.refetchEvents()
+
+          setTimeout(function() {
+            expect(scrollEl.scrollTop).toBe(100)
+            done()
+          }, 100)
+        }, 100)
+      }, 101) // after the fetch
     })
   })
 
@@ -47,7 +47,7 @@ describe('refetchEvents', function() {
 
     pushOptions({
       now: '2015-08-07',
-      defaultView: 'timeGridWeek'
+      initialView: 'timeGridWeek'
     })
 
     beforeEach(function() {
@@ -98,22 +98,23 @@ describe('refetchEvents', function() {
             callback(events)
           }, 100)
         }
+
         initCalendar({
-          eventSources: eventSources,
-          _eventsPositioned: function() {
-            fetchCount++
-            if (fetchCount === 1) {
-              // after the initial rendering of events, call refetchEvents
-              currentCalendar.refetchEvents()
-              expect($('.fetch0').length).toEqual(3) // original events still on the calendar
-              expect($('.fetch1').length).toEqual(0) // new events not yet refetched
-            } else if (fetchCount === 2) { // after refetch+rerender is over
-              expect($('.fetch0').length).toEqual(0)
-              expect($('.fetch1').length).toEqual(3)
-              done()
-            }
-          }
+          eventSources: eventSources
         })
+
+        setTimeout(function() {
+          fetchCount++
+          currentCalendar.refetchEvents()
+          expect($('.fetch0').length).toEqual(3) // original events still on the calendar
+          expect($('.fetch1').length).toEqual(0) // new events not yet refetched
+
+          setTimeout(function() {
+            expect($('.fetch0').length).toEqual(0)
+            expect($('.fetch1').length).toEqual(3)
+            done()
+          }, 101)
+        }, 101)
       })
     })
 

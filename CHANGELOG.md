@@ -1,4 +1,33 @@
 
+v5.0.0-beta.2 (2020-04-14)
+--------------------------
+
+Changes since beta.1:
+- feature: sticky header dates and footer scrollbar
+- feature: daygrid events with times render differently by default, with a dot
+- feature: a `datesDidUpdate` callback
+- renamed options:
+  - `defaultView` -> `initialView`
+  - `defaultDate` -> `initialDate`
+  - `header` -> `headerToolbar`
+  - `footer` -> `footerToolbar`
+  - `allDayDefault` -> `defaultAllDay`
+  - `eventRendering` -> `eventDisplay` (and `display` in event objects)
+  - `dir` -> `direction`
+- fix: sometimes event dragging and selecting broken after switching views (#5346)
+- fix: most likely fixed problem with infinite loop (#5352)
+- fix: timeline scrolling sometimes gets out of sync when using a scroll wheel (#4889)
+- fix: many other little bugfixes
+
+View the [full changelog](https://fullcalendar.io/docs/v5/upgrading-from-v4)
+
+
+v5.0.0-beta.1 (2020-04-06)
+--------------------------
+
+Read the [blog post](https://fullcalendar.io/blog/2020/04/v5-beta-released)
+
+
 v4.4.0 (2020-02-11)
 -------------------
 
@@ -747,7 +776,7 @@ A "more..." link when there are too many events on a day ([304]). Works with mon
 as well as the all-day section of the agenda views. New options:
 - `eventLimit`. a number or `true`
 - `eventLimitClick`. the `"popover`" value will reveal all events in a raised panel (the default)
-- `eventLimitText`
+- `moreLinkText`
 - `dayPopoverFormat`
 
 Changes related to height and scrollbars:

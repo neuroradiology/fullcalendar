@@ -15,8 +15,8 @@ export default {
     list: "График"
   },
   allDayText: "Цял ден",
-  eventLimitText: function(n) {
+  moreLinkText: function(n) {
     return "+още " + n;
   },
-  noEventsMessage: "Няма събития за показване"
+  noEventsText: "Няма събития за показване"
 };

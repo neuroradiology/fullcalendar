@@ -9,20 +9,20 @@
 <script>
 
   $(document).ready(function() {
-  
+
     var date = new Date();
     var d = date.getDate() + 1;
     var m = date.getMonth();
     var y = date.getFullYear();
-    
+
     $('#calendar').fullCalendar({
-      header: {
+      headerToolbar: {
         left: 'prev,next today',
         center: 'title',
         right: 'month,week,day'
       },
       editable: true,
-      defaultView: 'day',
+      initialView: 'day',
       allDaySlot: false,
       year: y,
       month: m,
@@ -54,7 +54,7 @@
         }
       ]
     });
-    
+
   });
 
 </script>

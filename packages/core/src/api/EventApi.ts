@@ -1,21 +1,22 @@
-import Calendar from '../Calendar'
-import { EventDef, EventInstance, NON_DATE_PROPS, DATE_PROPS } from '../structs/event'
+import { EventDef, NON_DATE_PROPS, DATE_PROPS } from '../structs/event-def'
+import { EventInstance } from '../structs/event-instance'
 import { UNSCOPED_EVENT_UI_PROPS } from '../component/event-ui'
 import { EventMutation } from '../structs/event-mutation'
 import { DateInput } from '../datelib/env'
-import { diffDates, computeAlignedDayRange } from '../util/misc'
+import { diffDates, computeAlignedDayRange } from '../util/date'
 import { DurationInput, createDuration, durationsEqual } from '../datelib/duration'
 import { createFormatter, FormatterInput } from '../datelib/formatting'
-import EventSourceApi from './EventSourceApi'
+import { EventSourceApi } from './EventSourceApi'
+import { ReducerContext } from '../reducers/ReducerContext'
 
-export default class EventApi {
+export class EventApi {
 
-  _calendar: Calendar
+  _context: ReducerContext
   _def: EventDef
   _instance: EventInstance | null
 
-  constructor(calendar: Calendar, def: EventDef, instance?: EventInstance) {
-    this._calendar = calendar
+  constructor(context: ReducerContext, def: EventDef, instance?: EventInstance) {
+    this._context = context
     this._def = def
     this._instance = instance || null
   }
@@ -68,7 +69,7 @@ export default class EventApi {
   }
 
   setStart(startInput: DateInput, options: { granularity?: string, maintainDuration?: boolean } = {}) {
-    let { dateEnv } = this._calendar
+    let { dateEnv } = this._context
     let start = dateEnv.createMarker(startInput)
 
     if (start && this._instance) { // TODO: warning if parsed bad
@@ -84,7 +85,7 @@ export default class EventApi {
   }
 
   setEnd(endInput: DateInput | null, options: { granularity?: string } = {}) {
-    let { dateEnv } = this._calendar
+    let { dateEnv } = this._context
     let end
 
     if (endInput != null) {
@@ -106,7 +107,7 @@ export default class EventApi {
   }
 
   setDates(startInput: DateInput, endInput: DateInput | null, options: { allDay?: boolean, granularity?: string } = {}) {
-    let { dateEnv } = this._calendar
+    let { dateEnv } = this._context
     let standardProps = { allDay: options.allDay } as any
     let start = dateEnv.createMarker(startInput)
     let end
@@ -179,7 +180,7 @@ export default class EventApi {
     let maintainDuration = options.maintainDuration
 
     if (maintainDuration == null) {
-      maintainDuration = this._calendar.opt('allDayMaintainDuration')
+      maintainDuration = this._context.options.allDayMaintainDuration
     }
 
     if (this._def.allDay !== allDay) {
@@ -190,9 +191,9 @@ export default class EventApi {
   }
 
   formatRange(formatInput: FormatterInput) {
-    let { dateEnv } = this._calendar
+    let { dateEnv } = this._context
     let instance = this._instance
-    let formatter = createFormatter(formatInput, this._calendar.opt('defaultRangeSeparator'))
+    let formatter = createFormatter(formatInput, this._context.options.defaultRangeSeparator)
 
     if (this._def.hasEnd) {
       return dateEnv.formatRange(instance.range.start, instance.range.end, formatter, {
@@ -211,21 +212,21 @@ export default class EventApi {
     let instance = this._instance
 
     if (instance) {
-      this._calendar.dispatch({
+      this._context.dispatch({
         type: 'MUTATE_EVENTS',
         instanceId: instance.instanceId,
         mutation,
         fromApi: true
       })
 
-      let eventStore = this._calendar.state.eventStore
+      let { eventStore } = this._context.getCurrentState()
       this._def = eventStore.defs[def.defId]
       this._instance = eventStore.instances[instance.instanceId]
     }
   }
 
   remove() {
-    this._calendar.dispatch({
+    this._context.dispatch({
       type: 'REMOVE_EVENT_DEF',
       defId: this._def.defId
     })
@@ -236,8 +237,8 @@ export default class EventApi {
 
     if (sourceId) {
       return new EventSourceApi(
-        this._calendar,
-        this._calendar.state.eventSources[sourceId]
+        this._context,
+        this._context.getCurrentState().eventSources[sourceId]
       )
     }
     return null
@@ -245,13 +246,13 @@ export default class EventApi {
 
   get start(): Date | null {
     return this._instance ?
-      this._calendar.dateEnv.toDate(this._instance.range.start) :
+      this._context.dateEnv.toDate(this._instance.range.start) :
       null
   }
 
   get end(): Date | null {
     return (this._instance && this._def.hasEnd) ?
-      this._calendar.dateEnv.toDate(this._instance.range.end) :
+      this._context.dateEnv.toDate(this._instance.range.end) :
       null
   }
 
@@ -262,7 +263,7 @@ export default class EventApi {
   get allDay(): boolean { return this._def.allDay }
   get title(): string { return this._def.title }
   get url(): string { return this._def.url }
-  get rendering(): string { return this._def.rendering }
+  get display(): string { return this._def.ui.display || 'auto' } // bad. just normalize the type earlier
   get startEditable(): boolean { return this._def.ui.startEditable }
   get durationEditable(): boolean { return this._def.ui.durationEditable }
   get constraint(): any { return this._def.ui.constraints[0] || null }

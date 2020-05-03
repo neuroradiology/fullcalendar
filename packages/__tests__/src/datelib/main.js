@@ -1,5 +1,5 @@
-import { formatPrettyTimeZoneOffset, formatIsoTimeZoneOffset, formatIsoWithoutTz } from './utils'
-import { getDSTDeadZone } from './dst-dead-zone'
+import { formatPrettyTimeZoneOffset, formatIsoTimeZoneOffset, formatIsoWithoutTz } from '../lib/datelib-utils'
+import { getDSTDeadZone } from '../lib/dst-dead-zone'
 import { DateEnv, createFormatter, createDuration, startOfDay, diffWholeWeeks, diffWholeDays, diffDayAndTime, Calendar } from '@fullcalendar/core'
 import dayGridPlugin from '@fullcalendar/daygrid'
 
@@ -9,7 +9,7 @@ describe('datelib', function() {
   beforeEach(function() {
     enLocale = new Calendar(document.createElement('div'), { // HACK
       plugins: [ dayGridPlugin ]
-    }).dateEnv.locale
+    }).currentState.dateEnv.locale
   })
 
   describe('computeWeekNumber', function() {

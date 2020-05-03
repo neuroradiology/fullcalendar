@@ -14,10 +14,10 @@ export default {
     day: "Diena",
     list: "Dienas kārtība"
   },
-  weekLabel: "Ned.",
+  weekText: "Ned.",
   allDayText: "Visu dienu",
-  eventLimitText: function(n) {
+  moreLinkText: function(n) {
     return "+vēl " + n;
   },
-  noEventsMessage: "Nav notikumu"
+  noEventsText: "Nav notikumu"
 };

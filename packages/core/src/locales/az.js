@@ -14,10 +14,10 @@ export default {
     day: "Gün",
     list: "Gündəm"
   },
-  weekLabel: "Həftə",
+  weekText: "Həftə",
   allDayText: "Bütün Gün",
-  eventLimitText: function(n) {
+  moreLinkText: function(n) {
     return "+ daha çox " + n;
   },
-  noEventsMessage: "Göstərmək üçün hadisə yoxdur"
+  noEventsText: "Göstərmək üçün hadisə yoxdur"
 };

@@ -1,9 +1,10 @@
-describe('eventLimit popover', function() {
+import { DayGridViewWrapper } from "../lib/wrappers/DayGridViewWrapper"
 
+describe('more-link popover', function() { // TODO: rename file
   pushOptions({
-    defaultView: 'dayGridMonth',
-    defaultDate: '2014-08-01',
-    eventLimit: 3,
+    initialView: 'dayGridMonth',
+    initialDate: '2014-08-01',
+    dayMaxEventRows: 3,
     events: [
       { title: 'event1', start: '2014-07-28', end: '2014-07-30', className: 'event1' },
       { title: 'event2', start: '2014-07-29', end: '2014-07-31', className: 'event2' },
@@ -14,58 +15,76 @@ describe('eventLimit popover', function() {
     handleWindowResize: false // because showing the popover causes scrollbars and fires resize
   })
 
-  it('closes when user clicks the X and trigger eventDestroy for every render', function() {
+  it('closes when user clicks the X and trigger eventWillUnmount for every render', function(done) {
     var eventsRendered = {}
     var renderCount = 0
     var activated = false
-    initCalendar({
-      eventRender: function(eventObject, element, view) {
+
+    let calendar = initCalendar({
+      eventDidMount: function(arg) {
         if (activated) {
-          eventsRendered[eventObject.title] = eventObject
+          eventsRendered[arg.title] = true
           ++renderCount
         }
       },
-      eventDestroy: function(eventObject, element, view) {
-        delete eventsRendered[eventObject.title]
+      eventWillUnmount: function(arg) {
+        delete eventsRendered[arg.title]
         --renderCount
       }
     })
+    let dayGridWrapper = new DayGridViewWrapper(calendar).dayGrid
+
     // Activate flags and pop event limit popover
     activated = true
-    $('.fc-more').simulate('click')
+    dayGridWrapper.openMorePopover()
+    setTimeout(function() {
 
-    expect($('.fc-more-popover')).toBeVisible()
-    $('.fc-more-popover .fc-close')
-      .simulate('click')
-    expect($('.fc-more-popover')).not.toBeVisible()
-    expect(Object.keys(eventsRendered).length).toEqual(0)
-    expect(renderCount).toEqual(0)
+      expect(dayGridWrapper.getMorePopoverEl()).toBeVisible()
+
+      dayGridWrapper.closeMorePopover()
+      setTimeout(function() {
+        expect(dayGridWrapper.getMorePopoverEl()).not.toBeVisible()
+        expect(Object.keys(eventsRendered).length).toEqual(0)
+        expect(renderCount).toEqual(0)
+        done()
+      })
+    })
   })
 
-  it('closes when user clicks outside of the popover and trigger eventDestroy for every render', function() {
+  it('closes when user clicks outside of the popover and trigger eventWillUnmount for every render', function(done) {
     var eventsRendered = {}
     var renderCount = 0
     var activated = false
-    initCalendar({
-      eventRender: function(eventObject, element, view) {
+
+    let calendar = initCalendar({
+      eventDidMount: function(arg) {
         if (activated) {
-          eventsRendered[eventObject.title] = eventObject
+          eventsRendered[arg.title] = true
           ++renderCount
         }
       },
-      eventDestroy: function(eventObject, element, view) {
-        delete eventsRendered[eventObject.title]
+      eventWillUnmount: function(arg) {
+        delete eventsRendered[arg.title]
         --renderCount
       }
     })
+    let dayGridWrapper = new DayGridViewWrapper(calendar).dayGrid
+
     // Activate flags and pop event limit popover
     activated = true
-    $('.fc-more').simulate('click')
+    dayGridWrapper.openMorePopover()
+    setTimeout(function() {
 
-    expect($('.fc-more-popover')).toBeVisible()
-    $('body').simulate('mousedown').simulate('click')
-    expect($('.fc-more-popover')).not.toBeVisible()
-    expect(Object.keys(eventsRendered).length).toEqual(0)
-    expect(renderCount).toEqual(0)
+      expect(dayGridWrapper.getMorePopoverEl()).toBeVisible()
+
+      $('body').simulate('mousedown').simulate('click')
+      setTimeout(function() {
+
+        expect(dayGridWrapper.getMorePopoverEl()).not.toBeVisible()
+        expect(Object.keys(eventsRendered).length).toEqual(0)
+        expect(renderCount).toEqual(0)
+        done()
+      })
+    })
   })
 })

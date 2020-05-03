@@ -16,6 +16,6 @@ export default {
     list: "Agenda"
   },
   allDayText: "Hele dag",
-  eventLimitText: "extra",
-  noEventsMessage: "Geen evenementen om te laten zien"
+  moreLinkText: "extra",
+  noEventsText: "Geen evenementen om te laten zien"
 };

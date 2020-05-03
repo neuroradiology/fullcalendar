@@ -1,12 +1,15 @@
 import { unpromisify } from '../util/promise'
-import { EventSourceError, EventSourceDef } from '../structs/event-source'
-import { EventInput } from '../structs/event'
+import { EventSourceDef } from '../structs/event-source-def'
+import { EventSourceError } from '../structs/event-source'
+import { EventInput } from '../structs/event-parse'
 import { createPlugin } from '../plugin-system'
 
 export type EventSourceFunc = (
   arg: {
     start: Date
     end: Date
+    startStr: string
+    endStr: string
     timeZone: string
   },
   successCallback: (events: EventInput[]) => void,
@@ -26,7 +29,7 @@ let eventSourceDef: EventSourceDef = {
   },
 
   fetch(arg, success, failure) {
-    let dateEnv = arg.calendar.dateEnv
+    let dateEnv = arg.context.dateEnv
     let func = arg.eventSource.meta as EventSourceFunc
 
     unpromisify(
@@ -46,6 +49,6 @@ let eventSourceDef: EventSourceDef = {
 
 }
 
-export default createPlugin({
+export const funcEventSourcePlugin = createPlugin({
   eventSourceDefs: [ eventSourceDef ]
 })

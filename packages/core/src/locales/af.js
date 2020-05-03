@@ -15,7 +15,7 @@ export default {
     day: "Dag",
     list: "Agenda"
   },
-  allDayHtml: "Heeldag",
-  eventLimitText: "Addisionele",
-  noEventsMessage: "Daar is geen gebeurtenisse nie"
+  allDayText: "Heeldag",
+  moreLinkText: "Addisionele",
+  noEventsText: "Daar is geen gebeurtenisse nie"
 };

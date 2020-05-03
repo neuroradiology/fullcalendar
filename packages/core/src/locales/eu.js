@@ -14,8 +14,8 @@ export default {
     day: "Eguna",
     list: "Agenda"
   },
-  weekLabel: "As",
-  allDayHtml: "Egun<br/>osoa",
-  eventLimitText: "gehiago",
-  noEventsMessage: "Ez dago ekitaldirik erakusteko"
+  weekText: "As",
+  allDayText: "Egun osoa",
+  moreLinkText: "gehiago",
+  noEventsText: "Ez dago ekitaldirik erakusteko"
 };

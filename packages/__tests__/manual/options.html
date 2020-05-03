@@ -27,7 +27,7 @@
       date: 15,
       */
 
-      //defaultView: 'dayGridMonth',
+      //initialView: 'dayGridMonth',
 
       selectable: true,
       selectMirror: true,
@@ -38,7 +38,7 @@
       //contentHeight: 500,
       //aspectRatio: 2,
 
-      header: {
+      headerToolbar: {
         left: 'title',
         center: 'month,week,dayGridWeek,day,dayGridDay',
         right: 'today prevYear,prev,next,nextYear'
@@ -48,12 +48,12 @@
       dragRevertDuration: 100,
 
       //allDaySlot: false,
-      allDayText: 'ALLDAY',
+      allDayContent: 'ALLDAY',
       firstHour: 10,
       slotMinutes: 15,
       defaultEventMinutes: 45,
 
-      //allDayDefault: false,
+      //defaultAllDay: false,
 
       /*
       titleFormat: {
@@ -61,7 +61,7 @@
       },
       */
 
-      columnHeaderFormat: {
+      dayHeaderFormat: {
         month: "dddd"
         //timeGrid: "ddd M/d!!!" // BUG: this wont work. timeGrid doesn't override our default for 'week'
       },
@@ -69,12 +69,12 @@
       timeFormat: "h(:mm)[T]{ - h(:mm)T}",
       //timeFormat: { week: "'YO'" },
 
-      minTime: 5,
-      maxTime: '10:45pm',
+      slotMinTime: 5,
+      slotMaxTime: '10:45pm',
       //dayClick: function(date) {
       //  console.log(date);
       //},
-      //dir: 'rtl',
+      //direction: 'rtl',
 
       eventColor: 'green',
       eventTextColor: 'yellow',

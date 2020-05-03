@@ -14,10 +14,10 @@ export default {
     day: "დღე",
     list: "დღის წესრიგი"
   },
-  weekLabel: "კვ",
+  weekText: "კვ",
   allDayText: "მთელი დღე",
-  eventLimitText: function(n) {
+  moreLinkText: function(n) {
     return "+ კიდევ " + n;
   },
-  noEventsMessage: "ღონისძიებები არ არის"
+  noEventsText: "ღონისძიებები არ არის"
 };

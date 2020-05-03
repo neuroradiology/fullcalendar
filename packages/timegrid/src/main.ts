@@ -1,18 +1,22 @@
 import { createPlugin } from '@fullcalendar/core'
-import AbstractTimeGridView from './AbstractTimeGridView'
-import TimeGridView, { buildDayTable } from './TimeGridView'
-import { TimeGridSeg } from './TimeGrid'
-import { TimeGridSlicer, buildDayRanges } from './SimpleTimeGrid'
+import { TimeColsView } from './TimeColsView'
+import { DayTimeColsView, buildTimeColsModel } from './DayTimeColsView'
+import { TimeColsSeg } from './TimeColsSeg'
+import { DayTimeCols, DayTimeColsSlicer, buildDayRanges } from './DayTimeCols'
+import './main.scss'
 
-export { TimeGridView, AbstractTimeGridView, buildDayTable, buildDayRanges, TimeGridSlicer, TimeGridSeg }
-export { default as TimeGrid } from './TimeGrid'
+export { DayTimeCols, DayTimeColsView, TimeColsView, buildTimeColsModel, buildDayRanges, DayTimeColsSlicer, TimeColsSeg }
+export { TimeCols } from './TimeCols'
+export { TimeSlatMeta, buildSlatMetas } from './TimeColsSlats'
+export { TimeColsSlatsCoords } from './TimeColsSlatsCoords'
 
 export default createPlugin({
-  defaultView: 'timeGridWeek',
+  initialView: 'timeGridWeek',
   views: {
 
     timeGrid: {
-      class: TimeGridView,
+      component: DayTimeColsView,
+      usesMinMaxTime: true, // indicates that slotMinTime/slotMaxTime affects rendering
       allDaySlot: true,
       slotDuration: '00:30:00',
       slotEventOverlap: true // a bad name. confused with overlap/constraint system

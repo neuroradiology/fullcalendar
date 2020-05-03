@@ -1,15 +1,13 @@
-import deepEqual from 'fast-deep-equal'
 import { Calendar } from '@fullcalendar/core'
 import timeGridPlugin from '@fullcalendar/timegrid'
-import { getFirstDateEl } from '../lib/ViewUtils'
-import { getEventEls } from '../event-render/EventRenderUtils'
-import { getTimeGridScroller, allDaySlotDisplayed } from '../lib/TimeGridViewUtils'
+import { TimeGridViewWrapper } from '../lib/wrappers/TimeGridViewWrapper'
+import { CalendarWrapper } from '../lib/wrappers/CalendarWrapper'
 
 function buildOptions() {
   return {
     plugins: [ timeGridPlugin ],
-    defaultView: 'timeGridWeek',
-    defaultDate: '2019-04-01',
+    initialView: 'timeGridWeek',
+    initialDate: '2019-04-01',
     scrollTime: '00:00',
     allDaySlot: true,
     events: [
@@ -32,52 +30,54 @@ describe('mutateOptions', function() {
     $calendarEl.remove()
   })
 
-  function mutateOptions(updates) {
-    calendar.mutateOptions(updates, [], false, deepEqual)
-  }
-
   it('will react to a single option and keep scroll', function() {
     calendar = new Calendar($calendarEl[0], buildOptions())
     calendar.render()
 
-    let scrollEl = getTimeGridScroller()
+    let viewWrapper = new TimeGridViewWrapper(calendar)
+    let scrollEl = viewWrapper.getScrollerEl()
+
     scrollEl.scrollTop = 100
     let scrollTop = scrollEl.scrollTop
     expect(scrollTop).toBeGreaterThan(0)
 
-    mutateOptions({ allDaySlot: false })
+    calendar.mutateOptions({ allDaySlot: false })
 
     expect(calendar.getOption('allDaySlot')).toBe(false)
-    expect(allDaySlotDisplayed()).toBe(false)
-    expect(getTimeGridScroller().scrollTop).toBe(scrollTop)
+    expect(viewWrapper.dayGrid).toBeFalsy()
+    expect(scrollEl.scrollTop).toBe(scrollTop)
   })
 
   it('rerenders events without rerendering view', function() {
     calendar = new Calendar($calendarEl[0], buildOptions())
     calendar.render()
-    let dateEl = getFirstDateEl()
 
-    mutateOptions({
+    let calendarWrapper = new CalendarWrapper(calendar)
+    let dateEl = calendarWrapper.getFirstDateEl()
+
+    calendar.mutateOptions({
       events: [
         { start: '2019-04-01T00:00:00' }
       ]
     })
 
-    expect(getEventEls().length).toBe(1)
-    expect(getFirstDateEl()).toBe(dateEl)
+    expect(calendarWrapper.getEventEls().length).toBe(1)
+    expect(calendarWrapper.getFirstDateEl()).toBe(dateEl)
   })
 
-  it('doesn\'t rerender anything for a defaultView change', function() {
+  it('doesn\'t rerender anything for a initialView change', function() {
     calendar = new Calendar($calendarEl[0], buildOptions())
     calendar.render()
-    let dateEl = getFirstDateEl()
 
-    mutateOptions({
-      defaultView: 'timeGridDay'
+    let calendarWrapper = new CalendarWrapper(calendar)
+    let dateEl = calendarWrapper.getFirstDateEl()
+
+    calendar.mutateOptions({
+      initialView: 'timeGridDay'
     })
 
     expect(calendar.view.type).toBe('timeGridWeek')
-    expect(getFirstDateEl()).toBe(dateEl)
+    expect(calendarWrapper.getFirstDateEl()).toBe(dateEl)
   })
 
 })
